@@ -1,7 +1,10 @@
 # awt-project-ws22-23-smart-learning-g1
 
 ## Pre-Requisites
-### Installing docker
+### Quick installation
+Install Docker desktop from https://www.docker.com/products/docker-desktop/
+
+#### Manual installation
 Follow the steps from https://docs.docker.com/engine/installation/linux/ubuntu/.
 
 In my case, Docker CE has been installed.
@@ -12,7 +15,6 @@ $ docker -v
 Docker version 17.03.1-ce, build c6d412e
 ```
 
-### Installing docker-compose
 Follow the steps from https://docs.docker.com/compose/install/.
 ```shell
 $ sudo curl -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
