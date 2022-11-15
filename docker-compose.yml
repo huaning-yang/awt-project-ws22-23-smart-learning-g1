@@ -1,0 +1,19 @@
+version: '3'  # version of compose format 
+
+services:
+  course-api-service:
+    build: ./course-api  # path is relative to docker-compose.yml localtion
+    volumes:
+      - ./course-api:/usr/src/app # mount point
+    ports:
+      - 5001:80  # host:container
+
+  website:
+    image: php:apache  # pulling image from DockerHub
+    volumes:
+      - ./website:/var/www/html # mount
+    ports:
+      - 5000:80  # host:container
+    depends_on:
+      - course-api-service  # website is not going to work 
+                             # unless course-api-service is running
