@@ -6,7 +6,7 @@ from sqlite3 import Error
 # Reading the data inside the xml
 # file to a variable under the name
 # data
-with open('data\AWT_small.xml', 'r') as f:
+with open('/usr/src/app/data/AWT_small.xml', 'r') as f:
     data = f.read()
 
 # Passing the stored data inside
@@ -48,7 +48,7 @@ class Course():
         return "({0}) {1}".format(self.CS_ID, self.CS_NAME)
 
     def getList(self):
-        return [self.CS_ID, self.CS_NAME, self.CS_LANGUAGE, self.CS_SUPPLIERID,  self.CS_DEGREE_EXAM, self.CS_PRICE, self.CS_WDB_TYPE, self.CS_WDB_MODE, self.CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL]
+        return [self.CS_NAME, self.CS_ID, self.CS_LANGUAGE, self.CS_SUPPLIERID,  self.CS_DEGREE_EXAM, self.CS_PRICE, self.CS_WDB_TYPE, self.CS_WDB_MODE, self.CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL]
 
 @dataclass
 class CourseSupplier():
@@ -63,17 +63,17 @@ class CourseSupplier():
         return "({0}) {1}".format(self.CSS_ID, self.CSS_NAME)
 
     def getList(self):
-        return [self.CSS_ID, self.CSS_NAME]
+        return [self.CSS_NAME, self.CSS_ID]
 
 
 courses = []
 coursesuppliers = []
 
-for b_course in b_courses[:1]:
+for b_course in b_courses[:10]:
     course = Course(b_course.CS_NAME.text, b_course.CS_ID.text, b_course.CS_LANGUAGE.text, b_course.CS_SUPPLIERID.text, b_course.CS_DEGREE_EXAM.text, b_course.CS_PRICE.text, b_course.CS_WDB_TYPE.text, b_course.CS_WDB_MODE.text, b_course.CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL.text)
     courses.append(course)
 
-for b_coursesupplier in b_coursesuppliers[:1]:
+for b_coursesupplier in b_coursesuppliers[:10]:
     coursesupplier = CourseSupplier(
         b_coursesupplier.CSS_NAME.text, b_coursesupplier.CSS_ID.text)
     coursesuppliers.append(coursesupplier)
@@ -148,15 +148,15 @@ def insert_coursesupplier(conn, coursesuppliers):
     conn.commit()
     print(cur.rowcount, "Records inserted successfully into coursesuppliers table")
 
-database = r"data\database.db"
+database = r"/usr/src/app/data/database.db"
 
 # create a database connection
 conn = create_connection(database)
 with conn:
     cur = conn.cursor()
-    with open('data\db\courses.sql','r', encoding='utf-8') as f:
+    with open('/usr/src/app/data/db/courses.sql','r', encoding='utf-8') as f:
         cur.executescript(f.read())
-    with open('data\db\coursesupplier.sql','r', encoding='utf-8') as f:
+    with open('/usr/src/app/data/db/coursesupplier.sql','r', encoding='utf-8') as f:
         cur.executescript(f.read())
     cur.executescript('DELETE FROM courses')
     cur.executescript('DELETE FROM coursesuppliers')

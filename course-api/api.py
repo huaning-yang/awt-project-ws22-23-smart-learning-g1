@@ -1,74 +1,79 @@
 # CourseOverview Service
 
 # Import framework
-from flask import Flask
 from flask_restful import Resource, Api
-import json
-from dataclasses import dataclass
-from dataclass_wizard import fromlist
+from flask import Flask, request, jsonify #added to top of file
+from flask_cors import CORS #added to top of file
+import sqlite3
 
-@dataclass
-class Course(Resource):
-    # course_id: str
-    # course_name: str
+def get_db_connection():
+    conn = sqlite3.connect('/usr/src/app/data/database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    # def __init__(self, course_id, course_name):
-    #     self.course_id = id
-    #     self.course_name = course_name
 
-    # def __str__(self):
-    #     return "({0}) {1}".format(self.course_id, self.course_name)
+def get_courses():
+    courses = []
+    try:
+        conn = get_db_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM courses")
+        rows = cur.fetchall()
 
-    # def get(self):
-    #     # Opening JSON file
-    #     f = open('/usr/src/app/courses.json')
+        # convert row objects to dictionary
+        for i in rows:
+            course = {}
+            course["CS_NAME"] = i["CS_NAME"]
+            course["CS_ID"] = i["CS_ID"]
+            course["CS_LANGUAGE"] = i["CS_LANGUAGE"]
+            course["CS_SUPPLIERID"] = i["CS_SUPPLIERID"]
+            course["CS_DEGREE_EXAM"] = i["CS_DEGREE_EXAM"]
+            course["CS_PRICE"] = i["CS_PRICE"]
+            course["CS_WDB_TYPE"] = i["CS_WDB_TYPE"]
+            course["CS_WDB_MODE"] = i["CS_WDB_MODE"]
+            course["CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL"] = i["CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL"]
+            courses.append(course)
+    except:
+        courses = []
 
-    #     # returns JSON object as 
-    #     # a dictionary
-    #     jsonData = json.load(f)
-    #     # courses = Course(**jsonData)
-    #     courses = fromlist(Course, jsonData)
-    #     print(courses[0])
-    #     # Closing file
-    #     f.close()
-    #     return courses
+    return courses
 
-    def get(self):
-        return {
-            'Courses': ['Aktuelles Arbeitsrecht 2022', 'Ambulante Pflege - Rechtssicher Handeln und Haftungsrisiken vermeiden', 
-            'Aufgaben des gesetzlichen Betreuers - Zur Reform des Betreuungsrechts',
-            'Basisqualifikation für ungelernte Pflegekräfte (zertifiziert, berufsbegleitend)',
-            'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-in (8 UE) - Online-Seminar',
-            'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-innen (24 UE)',
-            'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-innen (8 UE)',
-            'Beschäftigungs- und Aktivierungstherapie für dementiell erkrankte alte Menschen in stationären Altenhilfeeinrichtungen',
-            'Betreuungskraft gem. §§ 43b, 53c SGB XI (berufsbegleitend)',
-            'Demenz und Recht: Rechtssicheres Handeln zwischen Freiheit und Sicherheit',
-            'Dienstplangestaltung',
-            'Einführung in die Biografiearbeit mit alten Menschen',
-            'Entbürokratisierung in der Pflege - SIS verstehen und anwenden',
-            'Expertenstandard - Was gibt es Neues?',
-            'Fachkraft für gerontopsychiatrische Betreuung und Pflege (zertifiziert, berufsbegleitend)',
-            'Gerontopsychiatrische Grundlagen - Möglichkeiten personenzentrierter Kommunikation mit psychisch veränderten alten Menschen',
-            'Haftungsrecht in der Pflege',
-            'Humor für die Pflege (pflegen) - Online-Seminar',
-            'Hygienebeauftragte/-r in der Kita']
-        }
+# @dataclass
+# class Course(Resource):
+#     def get(self):
+#         return {
+#             'Courses': ['Aktuelles Arbeitsrecht 2022', 'Ambulante Pflege - Rechtssicher Handeln und Haftungsrisiken vermeiden', 
+#             'Aufgaben des gesetzlichen Betreuers - Zur Reform des Betreuungsrechts',
+#             'Basisqualifikation für ungelernte Pflegekräfte (zertifiziert, berufsbegleitend)',
+#             'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-in (8 UE) - Online-Seminar',
+#             'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-innen (24 UE)',
+#             'Berufspädagogische Pflichtfortbildung für Praxisanleiter/-innen (8 UE)',
+#             'Beschäftigungs- und Aktivierungstherapie für dementiell erkrankte alte Menschen in stationären Altenhilfeeinrichtungen',
+#             'Betreuungskraft gem. §§ 43b, 53c SGB XI (berufsbegleitend)',
+#             'Demenz und Recht: Rechtssicheres Handeln zwischen Freiheit und Sicherheit',
+#             'Dienstplangestaltung',
+#             'Einführung in die Biografiearbeit mit alten Menschen',
+#             'Entbürokratisierung in der Pflege - SIS verstehen und anwenden',
+#             'Expertenstandard - Was gibt es Neues?',
+#             'Fachkraft für gerontopsychiatrische Betreuung und Pflege (zertifiziert, berufsbegleitend)',
+#             'Gerontopsychiatrische Grundlagen - Möglichkeiten personenzentrierter Kommunikation mit psychisch veränderten alten Menschen',
+#             'Haftungsrecht in der Pflege',
+#             'Humor für die Pflege (pflegen) - Online-Seminar',
+#             'Hygienebeauftragte/-r in der Kita']
+#         }
 
-    # @classmethod
-    # def from_dict(cls, dict):
-    #     return cls(course_id=dict["course_id"], course_name=dict["course_name"])
-
-    # @classmethod
-    # def from_json(cls, json_str: str):
-    #     return cls.from_dict(json.loads(json_str))
 
 # Instantiate the app
 app = Flask(__name__)
-api = Api(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+# api = Api(app)
 
-# Create routes
-api.add_resource(Course, '/')
+# # Create routes
+# api.add_resource(Course, '/')
+@app.route('/', methods=['GET'])
+def api_get_users():
+    return jsonify(get_courses())
 
 # Run the application
 if __name__ == '__main__':

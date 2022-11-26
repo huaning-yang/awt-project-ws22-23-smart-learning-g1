@@ -107,9 +107,9 @@
 			<?php
 			$json = file_get_contents('http://course-api-service/');
 			$obj = json_decode($json);
-			$courses = $obj->Courses;
+			$courses = $obj;
 			foreach ($courses as $course) {
-				echo "<li class='course'>$course</li>";
+				echo "<li class='course'>$course->CS_NAME</li>";
 			}
 			?>
 		</ol>
