@@ -67,7 +67,7 @@
 		</div>
 
 
-		<form>
+		<form style="margin-bottom:50px;">
 			<div class="form-group row">
 				<div class="form-group col-md-3">
 					<select data-filter="provider" class="filter-provider filter form-control">
