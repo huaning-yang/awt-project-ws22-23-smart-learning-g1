@@ -66,42 +66,30 @@
 			</form>
 		</div>
 
-
-		<form style="margin-bottom:50px;">
-			<div class="form-group row">
-				<div class="form-group col-md-3">
-					<select data-filter="provider" class="filter-provider filter form-control">
-						<option value="">Select Provider</option>
-						<option value="">Show All</option>
-					</select>
-				</div>
-				<div class="form-group col-md-2">
-					<select data-filter="price" class="filter-price filter form-control">
-						<option value="">Select Price Range</option>
-						<option value="">Show All</option>
-					</select>
-				</div>
-				<div class="form-group col-md-3">
-					<select data-filter="location" class="filter-location filter form-control">
-						<option value="">Select Location</option>
-						<option value="">Show All</option>
-					</select>
-				</div>
-				<div class="form-group col-md-2">
-					<select data-filter="start-date" class="filter-start-date filter form-control">
-						<option value="">Select Start Date</option>
-						<option value="">Show All</option>
-					</select>
-				</div>
-				<div class="form-group col-md-2">
-					<select data-filter="duration" class="filter-duration filter form-control">
-						<option value="">Select Duration</option>
-						<option value="">Show All</option>
-					</select>
-				</div>
-
-			</div>
-		</form>
+		<div class="row" id="competencies">
+		<label for="competency-select">Competencies</label><br>
+		<select multiple="multiple" id="competency-select">
+		    <option value="cheese">Cheese</option>
+		    <option value="tomatoes">Tomatoes</option>
+		    <option value="mozarella">Mozzarella</option>
+		    <option value="mushrooms">Mushrooms</option>
+		    <option value="pepperoni">Pepperoni</option>
+		    <option value="onions">Onions</option>
+		</select>
+		</div>
+		<div class="row" id="users">
+		<label for="user-select">Current User</label><br>
+		<select id="user-select">
+			<option value="none">none</option>
+		    <option value="cheese">Cheese</option>
+		    <option value="tomatoes">Tomatoes</option>
+		    <option value="mozarella">Mozzarella</option>
+		    <option value="mushrooms">Mushrooms</option>
+		    <option value="pepperoni">Pepperoni</option>
+		    <option value="onions">Onions</option>
+		</select>
+		</div>
+		
 
 		<ol id='list'>
 		
