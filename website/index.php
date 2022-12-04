@@ -104,14 +104,18 @@
 		</form>
 
 		<ol id='list'>
+		
 			<?php
 			$json = file_get_contents('http://course-api-service/');
 			$obj = json_decode($json);
 			$courses = $obj;
 			foreach ($courses as $course) {
-				echo "<li class='course'>$course->CS_NAME</li>";
+				echo "<li class='course'>$course->course_name</li>";
 			}
 			?>
+			<!--\"neo4j+s://b367eb11. databases.neo4j.io\"In",
+user = \"neo4i\"n"
+password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->
 		</ol>
 
 </body>
