@@ -72,12 +72,20 @@
 		<div class="row" id="competencies">
 		<label for="competency-select">Competencies</label><br>
 		<select multiple="multiple" id="competency-select">
-		    <option value="cheese">Cheese</option>
+		    <!-- <option value="cheese">Cheese</option>
 		    <option value="tomatoes">Tomatoes</option>
 		    <option value="mozarella">Mozzarella</option>
 		    <option value="mushrooms">Mushrooms</option>
 		    <option value="pepperoni">Pepperoni</option>
-		    <option value="onions">Onions</option>
+		    <option value="onions">Onions</option> -->
+			<?php
+			$json = file_get_contents('http://course-api-service/skills');
+			$obj = json_decode($json);
+			$skills = $obj;
+			foreach ($skills as $skill) {
+				echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
+			}
+			?>
 		</select>
 		</div>
 		<div class="row" id="users">

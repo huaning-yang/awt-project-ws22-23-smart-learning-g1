@@ -105,8 +105,56 @@ class CourseList(Resource):
                 '''
             ))
         db = get_db()
-        result = db.read_transaction(get_courses)
+        result = db.execute_read(get_courses)
         return [serialize_course(record['course']) for record in result]
+
+
+class SkillModel(Schema):
+    type = 'object'
+    properties = {
+        'concept_uri': {
+            'type': 'string',
+        },
+        'description': {
+            'type': 'string',
+        },
+        'preferred_label': {
+            'type': 'string',
+        }
+    }
+
+class SkillList(Resource):
+    @swagger.doc({
+        'tags': ['skill'],
+        'summary': 'Find all skills',
+        'description': 'Returns a list of skills',
+        'responses': {
+            '200': {
+                'description': 'A list of skills',
+                'schema': {
+                    'type': 'array',
+                    'items': SkillModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        def get_skills(tx):
+            return list(tx.run(
+                '''
+                MATCH (skill:Skill) RETURN skill
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_skills)
+        return [serialize_skill(record['skill']) for record in result]
+
+def serialize_skill(skill):
+    return {
+        'concept_uri': skill['concept_uri'],
+        'description': skill['description'],
+        'preferred_label': skill['preferred_label']
+    }
 
 # Instantiate the app
 
@@ -119,6 +167,7 @@ api = Api(app)
 #     return jsonify(get_courses())
 
 api.add_resource(CourseList, '/')
+api.add_resource(SkillList, '/skills')
 
 # Run the application
 if __name__ == '__main__':
