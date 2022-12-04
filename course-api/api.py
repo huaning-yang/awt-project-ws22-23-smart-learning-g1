@@ -1,10 +1,11 @@
 # CourseOverview Service
 
 # Import framework
-from flask_restful import Resource
-from flask import Flask, request, jsonify, g #added to top of file
+from flask_restful import Resource, reqparse
+from flask import Flask, request, jsonify, g, send_from_directory #added to top of file
 from flask_cors import CORS #added to top of file
 from flask_restful_swagger_2 import Api, swagger, Schema
+from flask_json import FlaskJSON, json_response
 import sqlite3
 
 from neo4j import GraphDatabase, basic_auth
@@ -12,7 +13,15 @@ from neo4j.exceptions import Neo4jError
 import neo4j.time
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Instantiate the app
+
+api = Api(app)
+CORS(app)
+FlaskJSON(app)
+
+@api.representation('application/json')
+def output_json(data, code, headers=None):
+    return json_response(data_=data, headers_=headers, status_=code)
 
 driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
 
@@ -109,6 +118,52 @@ class CourseList(Resource):
         return [serialize_course(record['course']) for record in result]
 
 
+
+class Courses(Resource):
+    @swagger.doc({
+        'tags': ['course'],
+        'summary': 'Find courses filtered by skill',
+        'description': 'Returns a list of courses filtered by skill',
+        'parameters': [
+            {
+                'name': 'skill',
+                'description': 'One or more skills to filter on',
+                'in': 'query',
+                'type': 'array',
+                'items':
+                {
+                    'type': 'string'
+                },
+                'collectionFormat': 'multi'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'A list of courses filtered by skill',
+                'schema': {
+                    'type': 'array',
+                    'items': CourseModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        skills = request.args.get('skill')
+        def get_filtered_courses(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                WHERE skill.preferred_label in ["''' + ','.join(skills) +  '''"]
+                RETURN course
+                '''
+            ))
+
+        skills = request.args.getlist('skill')
+        # return(skills)
+        db = get_db()
+        result = db.execute_read(get_filtered_courses)
+        return [serialize_course(record['course']) for record in result]
+        
 class SkillModel(Schema):
     type = 'object'
     properties = {
@@ -156,9 +211,13 @@ def serialize_skill(skill):
         'preferred_label': skill['preferred_label']
     }
 
-# Instantiate the app
+class ApiDocs(Resource):
+    def get(self, path=None):
+        if not path:
+            path = 'index.html'
+        return send_from_directory('swaggerui', path)
 
-api = Api(app)
+
 
 # # Create routes
 # api.add_resource(Course, '/')
@@ -167,7 +226,9 @@ api = Api(app)
 #     return jsonify(get_courses())
 
 api.add_resource(CourseList, '/')
+api.add_resource(Courses, '/courses')
 api.add_resource(SkillList, '/skills')
+api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
 # Run the application
 if __name__ == '__main__':

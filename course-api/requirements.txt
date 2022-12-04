@@ -6,3 +6,4 @@ beautifulsoup4==4.11.1
 lxml==4.9.1
 neo4j==5.3.0
 flask-restful-swagger-2==0.35
+Flask-JSON==0.3.5
