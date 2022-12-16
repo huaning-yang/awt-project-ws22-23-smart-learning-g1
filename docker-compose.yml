@@ -13,7 +13,7 @@ services:
     volumes:
       - ./website:/var/www/html # mount
     ports:
-      - 5000:80  # host:container
+      - 5002:80  # host:container
     depends_on:
       - course-api-service  # website is not going to work 
                              # unless course-api-service is running

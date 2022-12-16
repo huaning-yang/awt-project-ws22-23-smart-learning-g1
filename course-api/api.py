@@ -159,6 +159,7 @@ class Courses(Resource):
             ))
 
         skills = request.args.getlist('skill')
+        print(skills)
         # return(skills)
         db = get_db()
         result = db.execute_read(get_filtered_courses)
@@ -195,9 +196,16 @@ class SkillList(Resource):
     })
     def get(self):
         def get_skills(tx):
+            # return list(tx.run(
+            #     '''
+            #     MATCH (skill:Skill) RETURN skill
+            #     '''
+            # ))
             return list(tx.run(
                 '''
-                MATCH (skill:Skill) RETURN skill
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                WHERE course.course_name in ['Social-Media Manager','Webentwicklung 2.0 - HTML5, CSS3, WordPress','Weiterbildung Wildnispädagogik','Programmierung PHP Frameworks: Laravel, Symfony, Zend','Experte in Investition und Finanzierung']
+                RETURN skill
                 '''
             ))
         db = get_db()
