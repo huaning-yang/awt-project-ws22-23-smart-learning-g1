@@ -8,5 +8,7 @@ RUN pip3 install -r requirements.txt
 COPY . /usr/src/app
 
 # Commands in a list
-RUN chmod a+x /usr/src/app/run.sh
-CMD ["/usr/src/app/run.sh"]
+
+#RUN chmod a+x /usr/src/app/run.sh
+#CMD ["/usr/src/app/run.sh"]
+CMD ["python", "/usr/src/app/api.py"]
