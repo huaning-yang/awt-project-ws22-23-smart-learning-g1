@@ -124,7 +124,7 @@ class CourseList(Resource):
 class Courses(Resource):
     @swagger.doc({
         'tags': ['course'],
-        'summary': 'Find courses filtered by skill',
+        'summary': 'Find courses filtered by skill prefered label',
         'description': 'Returns a list of courses filtered by skill',
         'parameters': [
             {
@@ -181,6 +181,48 @@ class SkillModel(Schema):
         }
     }
 
+
+class Skills(Resource):
+    @swagger.doc({
+        'tags': ['skill'],
+        'summary': 'Find skills filtered by course id',
+        'description': 'Returns a list of skills filtered by courses',
+        'parameters': [
+            {
+                'name': 'course',
+                'description': 'One or more course ids to filter on',
+                'in': 'query',
+                'type': 'array',
+                'items':
+                {
+                    'type': 'string'
+                },
+                'collectionFormat': 'multi'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'A list of skills filtered by courses',
+                'schema': {
+                    'type': 'array',
+                    'items': SkillModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        courses = request.args.getlist('course')
+        def get_filtered_skills(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                WHERE course.course_id in ["''' + ','.join(courses) +  '''"]
+                RETURN skill
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_filtered_skills)
+        return [serialize_skill(record['skill']) for record in result]
 class SkillList(Resource):
     @swagger.doc({
         'tags': ['skill'],
@@ -198,18 +240,18 @@ class SkillList(Resource):
     })
     def get(self):
         def get_skills(tx):
-            # return list(tx.run(
-            #     '''
-            #     MATCH (skill:Skill) RETURN skill
-            #     '''
-            # ))
             return list(tx.run(
                 '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
-                WHERE course.course_name in ['Social-Media Manager','Webentwicklung 2.0 - HTML5, CSS3, WordPress','Weiterbildung Wildnispädagogik','Programmierung PHP Frameworks: Laravel, Symfony, Zend','Experte in Investition und Finanzierung']
-                RETURN skill
+                MATCH (skill:Skill) RETURN skill
                 '''
             ))
+            # return list(tx.run(
+            #     '''
+            #     MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+            #     WHERE course.course_name in ['Social-Media Manager','Webentwicklung 2.0 - HTML5, CSS3, WordPress','Weiterbildung Wildnispädagogik','Programmierung PHP Frameworks: Laravel, Symfony, Zend','Experte in Investition und Finanzierung']
+            #     RETURN skill
+            #     '''
+            # ))
         db = get_db()
         result = db.execute_read(get_skills)
         return [serialize_skill(record['skill']) for record in result]
@@ -220,6 +262,62 @@ def serialize_skill(skill):
         'description': skill['description'],
         'preferred_label': skill['preferred_label']
     }
+
+class MissingEssential(Resource):
+    @swagger.doc({
+        'tags': ['recommender'],
+        'description': 'Recommends keywords based on rules using missing essential skills',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'One or more Occupations (uri) to recommend missing skills',
+            'in': 'query',
+            'type': 'array',
+            'items': {
+                'type': 'string'
+            },
+            'collectionFormat': 'multi'
+        },
+        {
+            'name': 'personID',
+            'description': 'Identifier of a person',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of missing skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        personID = request.args.getlist('personID')
+        def get_essentialSkills(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[:essential]->(s:Skill)
+                WHERE o.occupationURI in ["''' + ','.join(occupation) +  '''"]
+                RETURN s
+                '''
+            ))
+        def get_personSkills(tx):
+            return list(tx.run(
+                '''
+                MATCH (p:person)-[:hasSkill]->(s:skill)
+                WHERE p.id in ["''' + ','.join(personID) +  '''"]
+                RETURN s
+                '''
+            ))
+        db = get_db()
+        essential = db.execute_read(get_essentialSkills)
+        skills = set(db.execute_read(get_personSkills))
+        return [x for x in essential if x not in skills]
+        
 
 class ApiDocs(Resource):
     def get(self, path=None):
@@ -238,6 +336,8 @@ class ApiDocs(Resource):
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
 api.add_resource(SkillList, '/skills')
+api.add_resource(Skills, '/filterSkills')
+api.add_resource(MissingEssential, '/essentials')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
 # Run the application
