@@ -23,7 +23,9 @@ FlaskJSON(app)
 def output_json(data, code, headers=None):
     return json_response(data_=data, headers_=headers, status_=code)
 
-driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
+# driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
+driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
+
 
 def get_db_connection():
     conn = sqlite3.connect('/usr/src/app/data/database.db')
@@ -159,6 +161,7 @@ class Courses(Resource):
             ))
 
         skills = request.args.getlist('skill')
+        print(skills)
         # return(skills)
         db = get_db()
         result = db.execute_read(get_filtered_courses)
@@ -195,9 +198,16 @@ class SkillList(Resource):
     })
     def get(self):
         def get_skills(tx):
+            # return list(tx.run(
+            #     '''
+            #     MATCH (skill:Skill) RETURN skill
+            #     '''
+            # ))
             return list(tx.run(
                 '''
-                MATCH (skill:Skill) RETURN skill
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                WHERE course.course_name in ['Social-Media Manager','Webentwicklung 2.0 - HTML5, CSS3, WordPress','Weiterbildung Wildnispädagogik','Programmierung PHP Frameworks: Laravel, Symfony, Zend','Experte in Investition und Finanzierung']
+                RETURN skill
                 '''
             ))
         db = get_db()

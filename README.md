@@ -1,6 +1,10 @@
 # awt-project-ws22-23-smart-learning-g1
 
 ## Pre-Requisites
+### No installation required
+GitHub Codespaces offer easy to use online development (https://github.com/features/codespaces).
+To start a codespaces container click on code in the top right corner and start a codespace
+
 ### Quick installation
 Install Docker desktop from https://www.docker.com/products/docker-desktop/
 
@@ -30,7 +34,7 @@ docker-compose version 1.11.2, build dfed245
 ```
 ## Let it run
 ```shell
-docker-compose up
+docker-compose up --build
 ```
 ## Links
 * [Simple Flask SPA](https://www.bogotobogo.com/DevOps/Docker/Docker-Compose-FlaskREST-Service-Container-and-Apache-Container.php)

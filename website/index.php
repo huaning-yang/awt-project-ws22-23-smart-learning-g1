@@ -9,6 +9,7 @@
 	<!-- linking the stylesheet(CSS) -->
 	<link rel="stylesheet" type="text/css" href="./css/style.css">
 	<script src="./js/script.js"></script>
+	<script src="./js/multiselect-dropdown.js" ></script>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" />
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -55,7 +56,18 @@
 	<hr>
 	<div class="container">
 
-
+		<div class="row" id="occupency">
+			<label for="occupency-select">Current occupency</label><br>
+			<select id="occupency-select">
+				<option value="none">none</option>
+		   		<option value="cheese">Cheese</option>
+				<option value="tomatoes">Tomatoes</option>
+		    	<option value="mozarella">Mozzarella</option>
+		    	<option value="mushrooms">Mushrooms</option>
+		    	<option value="pepperoni">Pepperoni</option>
+		    	<option value="onions">Onions</option>
+			</select>
+		</div>
 
 
 		<div class="row" id="search">
@@ -64,14 +76,14 @@
 					<input id="searchbar" onkeyup="search_course()" class="form-control" type="text" name="search" placeholder="Search courses..">
 				</div>
 				<!-- <div class="form-group col-xs-3">
-                <button type="submit" class="btn btn-block btn-primary">Search</button>
+                
             </div> -->
 			</form>
 		</div>
 
 		<div class="row" id="competencies">
 		<label for="competency-select">Competencies</label><br>
-		<select multiple="multiple" id="competency-select">
+		<select multiple="multiple" multiselect-search="true" id="competency-select">
 		    <!-- <option value="cheese">Cheese</option>
 		    <option value="tomatoes">Tomatoes</option>
 		    <option value="mozarella">Mozzarella</option>
@@ -88,19 +100,10 @@
 			?>
 		</select>
 		</div>
-		<div class="row" id="users">
-		<label for="user-select">Current User</label><br>
-		<select id="user-select">
-			<option value="none">none</option>
-		    <option value="cheese">Cheese</option>
-		    <option value="tomatoes">Tomatoes</option>
-		    <option value="mozarella">Mozzarella</option>
-		    <option value="mushrooms">Mushrooms</option>
-		    <option value="pepperoni">Pepperoni</option>
-		    <option value="onions">Onions</option>
-		</select>
+		<div class="row" id="filter">
+		<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>	
+		<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>	
 		</div>
-		
 
 		<ol id='list'>
 		
