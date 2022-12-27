@@ -9,12 +9,12 @@
 	<!-- linking the stylesheet(CSS) -->
 	<link rel="stylesheet" type="text/css" href="./css/style.css">
 	<script src="./js/script.js"></script>
-	<script src="./js/multiselect-dropdown.js" ></script>
+	<!-- <script src="./js/multiselect-dropdown.js" ></script> -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" />
+	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" /> -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script> -->
 </head>
 
 <body>
@@ -78,12 +78,12 @@
 				<!-- <div class="form-group col-xs-3">
                 
             </div> -->
-			</form>
+			</for
 		</div>
 
 		<div class="row" id="competencies">
 		<label for="competency-select">Competencies</label><br>
-		<select multiple="multiple" multiselect-search="true" id="competency-select">
+		<select multiple id="competency-select">
 		    <!-- <option value="cheese">Cheese</option>
 		    <option value="tomatoes">Tomatoes</option>
 		    <option value="mozarella">Mozzarella</option>
