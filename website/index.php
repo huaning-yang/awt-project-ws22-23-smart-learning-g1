@@ -80,6 +80,8 @@
 						echo "<option class='existing-skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
 					}
 					?>
+				<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
+				<button type="button">Import europass</button>
 			</div>
 
 
