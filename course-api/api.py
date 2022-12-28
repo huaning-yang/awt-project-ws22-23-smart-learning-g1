@@ -192,12 +192,16 @@ class OccupationModel(Schema):
     properties = {
         'OccupationUri': {
             'type': 'string',
+        },
+        'preferred_label': {
+            'type': 'string',
         }
     }
 
 def serialize_occupation(occupation):
     return {
-        'OccupationUri': occupation['OccupationUri']
+        'OccupationUri': occupation['OccupationUri'],
+        'preferred_label': occupation['preferred_label']
     }
 
 class OccupationList(Resource):

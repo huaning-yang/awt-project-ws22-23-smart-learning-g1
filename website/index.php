@@ -57,7 +57,7 @@
 	<div class="container">
 
 		<div class="row" id="user">
-			<label for="occupency-select">Current occupency</label><br>
+			<label for="occupency-select">Planned occupency</label><br>
 			<select id="occupency-select">
 				<option class='occupation' value="none">none</option>
 				<?php
@@ -65,7 +65,7 @@
 				$obj = json_decode($json);
 				$occupations = $obj;
 				foreach ($occupations as $occupation) {
-					echo "<option class='occupation' value='$occupation->OccupationUri'>$occupation->OccupationUri</option>";
+					echo "<option class='occupation' value='$occupation->OccupationUri'>$occupation->preferred_label</option>";
 				}
 				?>
 			</select>
