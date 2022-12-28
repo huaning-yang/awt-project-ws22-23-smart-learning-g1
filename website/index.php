@@ -59,13 +59,21 @@
 		<div class="row" id="occupency">
 			<label for="occupency-select">Current occupency</label><br>
 			<select id="occupency-select">
-				<option value="none">none</option>
-		   		<option value="cheese">Cheese</option>
+				<option class='occupation' value="none">none</option>
+		   		<!-- <option value="cheese">Cheese</option>
 				<option value="tomatoes">Tomatoes</option>
 		    	<option value="mozarella">Mozzarella</option>
 		    	<option value="mushrooms">Mushrooms</option>
 		    	<option value="pepperoni">Pepperoni</option>
-		    	<option value="onions">Onions</option>
+		    	<option value="onions">Onions</option> -->
+				<?php
+					$json = file_get_contents('http://course-api-service/occupations');
+					$obj = json_decode($json);
+					$occupations = $obj;
+					foreach ($occupations as $occupation) {
+   						echo "<option class='occupation' value='$occupation->OccupationUri'>$occupation->OccupationUri</option>";
+					}
+				?>
 			</select>
 		</div>
 
@@ -75,46 +83,37 @@
 				<div class="form-group col-xs-9">
 					<input id="searchbar" onkeyup="search_course()" class="form-control" type="text" name="search" placeholder="Search courses..">
 				</div>
-				<!-- <div class="form-group col-xs-3">
-                
-            </div> -->
 			</for
 		</div>
 
 		<div class="row" id="competencies">
 		<label for="competency-select">Competencies</label><br>
 		<select multiple id="competency-select">
-		    <!-- <option value="cheese">Cheese</option>
-		    <option value="tomatoes">Tomatoes</option>
-		    <option value="mozarella">Mozzarella</option>
-		    <option value="mushrooms">Mushrooms</option>
-		    <option value="pepperoni">Pepperoni</option>
-		    <option value="onions">Onions</option> -->
 			<?php
-			$json = file_get_contents('http://course-api-service/skills');
-			$obj = json_decode($json);
-			$skills = $obj;
-			foreach ($skills as $skill) {
-				echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
-			}
-			?>
+$json = file_get_contents('http://course-api-service/skills');
+$obj = json_decode($json);
+$skills = $obj;
+foreach ($skills as $skill) {
+    echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
+}
+?>
 		</select>
 		</div>
 		<div class="row" id="filter">
-		<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>	
-		<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>	
+		<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
+		<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 		</div>
 
 		<ol id='list'>
-		
+
 			<?php
-			$json = file_get_contents('http://course-api-service/');
-			$obj = json_decode($json);
-			$courses = $obj;
-			foreach ($courses as $course) {
-				echo "<li class='course'>$course->course_name</li>";
-			}
-			?>
+$json = file_get_contents('http://course-api-service/');
+$obj = json_decode($json);
+$courses = $obj;
+foreach ($courses as $course) {
+    echo "<li class='course'>$course->course_name</li>";
+}
+?>
 			<!--\"neo4j+s://b367eb11. databases.neo4j.io\"In",
 user = \"neo4i\"n"
 password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->

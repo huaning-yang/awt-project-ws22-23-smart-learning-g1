@@ -14,9 +14,9 @@ import neo4j.time
 
 app = Flask(__name__)
 # Instantiate the app
-
-api = Api(app)
 CORS(app)
+api = Api(app)
+
 FlaskJSON(app)
 
 @api.representation('application/json')
@@ -31,34 +31,6 @@ def get_db_connection():
     conn = sqlite3.connect('/usr/src/app/data/database.db')
     conn.row_factory = sqlite3.Row
     return conn
-
-
-# def get_courses():
-#     courses = []
-#     try:
-#         conn = get_db_connection()
-#         conn.row_factory = sqlite3.Row
-#         cur = conn.cursor()
-#         cur.execute("SELECT * FROM courses")
-#         rows = cur.fetchall()
-
-#         # convert row objects to dictionary
-#         for i in rows:
-#             course = {}
-#             course["CS_NAME"] = i["CS_NAME"]
-#             course["CS_ID"] = i["CS_ID"]
-#             course["CS_LANGUAGE"] = i["CS_LANGUAGE"]
-#             course["CS_SUPPLIERID"] = i["CS_SUPPLIERID"]
-#             course["CS_DEGREE_EXAM"] = i["CS_DEGREE_EXAM"]
-#             course["CS_PRICE"] = i["CS_PRICE"]
-#             course["CS_WDB_TYPE"] = i["CS_WDB_TYPE"]
-#             course["CS_WDB_MODE"] = i["CS_WDB_MODE"]
-#             course["CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL"] = i["CS_WDB_UNTERRICHTSSTUNDEN_ANZAHL"]
-#             courses.append(course)
-#     except:
-#         courses = []
-
-#     return courses
 
 def get_db():
     if not hasattr(g, 'neo4j_db'):
@@ -198,16 +170,10 @@ class SkillList(Resource):
     })
     def get(self):
         def get_skills(tx):
-            # return list(tx.run(
-            #     '''
-            #     MATCH (skill:Skill) RETURN skill
-            #     '''
-            # ))
+            # For performance reasons limit for now
             return list(tx.run(
                 '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
-                WHERE course.course_name in ['Social-Media Manager','Webentwicklung 2.0 - HTML5, CSS3, WordPress','Weiterbildung Wildnispädagogik','Programmierung PHP Frameworks: Laravel, Symfony, Zend','Experte in Investition und Finanzierung']
-                RETURN skill
+                MATCH (skill:Skill) RETURN skill LIMIT 25
                 '''
             ))
         db = get_db()
@@ -221,23 +187,55 @@ def serialize_skill(skill):
         'preferred_label': skill['preferred_label']
     }
 
+class OccupationModel(Schema):
+    type = 'object'
+    properties = {
+        'OccupationUri': {
+            'type': 'string',
+        }
+    }
+
+def serialize_occupation(occupation):
+    return {
+        'OccupationUri': occupation['OccupationUri']
+    }
+
+class OccupationList(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'summary': 'Find all occupations',
+        'description': 'Returns a list of occupations',
+        'responses': {
+            '200': {
+                'description': 'A list of occupations',
+                'schema': {
+                    'type': 'array',
+                    'items': OccupationModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        def get_occupations(tx):
+            return list(tx.run(
+                '''
+                MATCH (occupation:Occupation) RETURN occupation LIMIT 25
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_occupations)
+        return [serialize_occupation(record['occupation']) for record in result]
+
 class ApiDocs(Resource):
     def get(self, path=None):
         if not path:
             path = 'index.html'
         return send_from_directory('swaggerui', path)
 
-
-
-# # Create routes
-# api.add_resource(Course, '/')
-# @app.route('/', methods=['GET'])
-# def api_get_users():
-#     return jsonify(get_courses())
-
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
 api.add_resource(SkillList, '/skills')
+api.add_resource(OccupationList, '/occupations')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
 # Run the application
