@@ -66,3 +66,14 @@ function clearFilter() {
 		elementsCompetencies[i].selected = false;
     }
 }
+
+
+function saveCompetenices() {
+		var items = document.getElementsByName("skill");
+		var selectedItems = "";
+		for (var i = 0; i < items.length; i++) {
+			if (items[i].type == "checkbox" && items[i].checked == true) selectedItems += items[i].value + "\n";
+		}
+		console.log(selectedItems);
+}
+

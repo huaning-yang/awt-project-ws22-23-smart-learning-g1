@@ -55,7 +55,6 @@
 	</div>
 	<hr>
 	<div class="container">
-
 		<div class="row" id="user">
 			<label for="occupency-select">Planned occupency</label><br>
 			<select id="occupency-select">
@@ -71,7 +70,8 @@
 			</select>
 			<div class="row" id="existing-competencies">
 				<label for="existing-competencies-select">Existing Competencies</label><br>
-				<select multiple id="existing-competencies-select">
+				<!-- 
+					<select multiple id="existing-competencies-select">
 					<?php
 					$json = file_get_contents('http://course-api-service/skills');
 					$obj = json_decode($json);
@@ -79,12 +79,37 @@
 					foreach ($skills as $skill) {
 						echo "<option class='existing-skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
 					}
-					?>
-				<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
-				<button type="button">Import europass</button>
+
+					?> 
+				--> 
+				<div class="scrollable">
+					<form>
+					  
+						
+					  <?php
+					   $json = file_get_contents('http://course-api-service/skills');
+					   $obj = json_decode($json);
+					   $skills = $obj;
+
+					   foreach ($skills as $skill) {
+
+						echo  "<input type='checkbox' id='$skill->preferred_label' name='skill' value='$skill->preferred_label'> $skill->preferred_label <br>";
+						
+					   }
+
+					?> 
+					</form>
+					
+				</div>
+				<input type="button" value="Save" onclick=saveCompetenices();>
+				<br>
+				<div class="container">
+					<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
+					<button type="button">Import europass</button>
+				</div>
 			</div>
 
-
+			<!--
 			<div class="row" id="search">
 				<form id="search-form" action="" method="POST" enctype="multipart/form-data">
 					<div class="form-group col-xs-9">
@@ -124,7 +149,7 @@
 user = \"neo4i\"n"
 password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->
 					</ol>
-
+					-->
 </body>
 
 </html>
