@@ -12,7 +12,9 @@ class Person:
     def print(self):
         print(f"User name: {self.firstName} {self.lastName}")
         print(f"User ID: {self.id}")
-        print(f"Skils: {self.skills}")
+        print(f"Skils:----)")
+        for skill in self.skills:
+            skill.print()
         print("Jobs:----")
         for job in self.jobs:
             job.print()

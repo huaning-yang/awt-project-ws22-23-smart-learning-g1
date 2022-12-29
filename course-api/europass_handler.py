@@ -8,7 +8,7 @@ allskills = ["Java", "JavaScript", "TypeScript",
 
 # link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/253045e3-969d-4882-957d-c68f014e3e6d?view=json"
 link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/7f1bab8d-a88b-4186-bf1d-b78535c740cb?view=html"
- 
+
 if link.endswith("html"):
     print("Converting to JSON...")
     link = link.replace("view=html", "view=json")
@@ -34,8 +34,13 @@ else:
 
     workExperiences = cvJson["profile"]["workExperiences"]
     for experience in workExperiences:
-        usersjobs.append(job.Job(experience["occupation"]["label"], str(
-            experience["mainActivities"]).replace("<p>", "")))
+        occupation = job.Job(experience["occupation"]["label"], str(
+            experience["mainActivities"]).replace("<p>", ""))
+        if "uri" in experience["occupation"]:
+            occupation.uri = experience["occupation"]["uri"]
+
+        usersjobs.append(occupation)
+
 
     user1 = person.Person(firstName=firstName, lastName=lastName, id=uid)
     user1.skills = usersskills

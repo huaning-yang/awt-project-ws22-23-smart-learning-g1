@@ -4,3 +4,4 @@ data\database.db
 !.devcontainer
 !.github
 !.gitignore
+test.py

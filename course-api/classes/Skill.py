@@ -1,17 +1,11 @@
-import spacy
+class Skill:
+  def __init__(self, concept_uri, description, title):
+    self.concept_uri = concept_uri
+    self.description = description
+    self.title = title
   
-nlp = spacy.load('en_core_web_lg')
-  
-print("Enter two space-separated words")
-words = "python digital"
-  
-tokens = nlp(words)
-  
-for token in tokens:
-    print(token.text, token.has_vector, token.vector_norm, token.is_oov)
-  
-token1, token2 = tokens[0], tokens[1]
-  
-print("Similarity:", token1.similarity(token2))
-
-
+  def print(self):
+    print(f"   ------------------------")
+    print(f"     - Skill title: {self.title}")
+    print(f"     - Skill concept_uri: {self.concept_uri}")
+    print(f"     - Skill description: {self.description}")
