@@ -90,7 +90,6 @@
 					<div class="form-group col-xs-9">
 						<input id="searchbar" onkeyup="search_course()" class="form-control" type="text" name="search" placeholder="Search courses..">
 					</div>
-					</for </div>
 
 					<div class="row" id="competencies">
 						<label for="competency-select">Filter Competencies</label><br>
@@ -107,6 +106,7 @@
 					</div>
 					<div class="row" id="filter">
 						<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
+						<button type="submit" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
 						<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 					</div>
 

@@ -280,6 +280,42 @@ def serialize_occupation(occupation):
         'preferred_label': occupation['preferred_label']
     }
 
+class OccupationURI(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'summary': 'Get occupation URI from preferred label',
+        'description': 'Return a uri of a occupation',
+        'parameters': [
+            {
+                'name': 'occupation',
+                'description': 'Preferred Label of a occupation',
+                'in': 'query',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'occupation uri',
+                'schema': {
+                    'type': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        label = request.args.getlist('occupation')
+        def get_uri(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)
+                WHERE o.preferred_label in ["''' + ','.join(label) +  '''"]
+                RETURN o.OccupationUri
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_uri)
+        return result
+
 class OccupationList(Resource):
     @swagger.doc({
         'tags': ['occupation'],
@@ -407,6 +443,7 @@ api.add_resource(Skills, '/filterSkills')
 api.add_resource(SkillLabel, '/label')
 api.add_resource(MissingEssential, '/essentials')
 api.add_resource(OccupationList, '/occupations')
+api.add_resource(OccupationURI, '/occupationsuri')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
 # Run the application
