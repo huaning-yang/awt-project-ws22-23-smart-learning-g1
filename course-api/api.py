@@ -113,7 +113,7 @@ class Courses(Resource):
         ],
         'responses': {
             '200': {
-                'description': 'A list of courses filtered by skill',
+                'description': 'A list of courses filtered by skill preferred label',
                 'schema': {
                     'type': 'array',
                     'items': CourseModel,
@@ -180,6 +180,82 @@ class SkillList(Resource):
         result = db.execute_read(get_skills)
         return [serialize_skill(record['skill']) for record in result]
 
+class SkillLabel(Resource):
+    @swagger.doc({
+        'tags': ['skill'],
+        'summary': 'find preferred label for a skill uri',
+        'description': 'return a preferred label for list of skills',
+        'parameters': [
+            {
+                'name': 'skilluri',
+                'in': 'query',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200':{
+                'description': 'A list of pref label skills',
+                'schema': {
+                    'type': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        skills = request.args.getlist('skilluri')
+        def get_pref_label(tx):
+            return list(tx.run(
+                '''
+                MATCH (s:Skill)
+                WHERE s.concept_uri in ["''' + ','.join(skills) +  '''"]
+                RETURN s.preferred_label'''
+            ))
+        db = get_db()
+        result = db.execute_read(get_pref_label)
+        return result[0]
+
+class Skills(Resource):
+    @swagger.doc({
+        'tags': ['skill'],
+        'summary': 'Find skills filtered by course id',
+        'description': 'Returns a list of skills filtered by courses',
+        'parameters': [
+            {
+                'name': 'course',
+                'description': 'One or more course ids to filter on',
+                'in': 'query',
+                'type': 'array',
+                'items':
+                {
+                    'type': 'string'
+                },
+                'collectionFormat': 'multi'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'A list of skills filtered by courses',
+                'schema': {
+                    'type': 'array',
+                    'items': SkillModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        courses = request.args.getlist('course')
+        def get_filtered_skills(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                WHERE course.course_id in ["''' + ','.join(courses) +  '''"]
+                RETURN skill
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_filtered_skills)
+        return [serialize_skill(record['skill']) for record in result]
+
 def serialize_skill(skill):
     return {
         'concept_uri': skill['concept_uri'],
@@ -230,6 +306,94 @@ class OccupationList(Resource):
         result = db.execute_read(get_occupations)
         return [serialize_occupation(record['occupation']) for record in result]
 
+class MissingEssential(Resource):
+    @swagger.doc({
+        'tags': ['recommender'],
+        'description': 'Recommends keywords based on rules using missing essential skills',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'One or more Occupations (uri) to recommend missing skills',
+            'in': 'query',
+            'type': 'array',
+            'items': {
+                'type': 'string'
+            },
+            'collectionFormat': 'multi'
+        },
+        {
+            'name': 'personID',
+            'description': 'Identifier of a person',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of missing skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        personID = request.args.getlist('personID')
+        def get_essentialSkills(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                RETURN s
+                '''
+            ))
+        # def get_personSkills(tx):
+        #     return list(tx.run(
+        #         '''
+        #         MATCH (p:person)-[:hasSkill]->(s:skill)
+        #         WHERE p.id in ["''' + ','.join(personID) +  '''"]
+        #         RETURN s
+        #         '''
+        #     ))
+        def get_differences(essential, person):
+            return [x for x in essential if x not in person]
+        db = get_db()
+        essentials = db.execute_read(get_essentialSkills)
+        # skills = set(db.execute_read(get_personSkills))
+        # return [x for x in essential if x not in skills]
+        # essential = ['http://data.europa.eu/esco/skill/fed5b267-73fa-461d-9f69-827c78beb39d', 
+        # 'http://data.europa.eu/esco/skill/05bc7677-5a64-4e0c-ade3-0140348d4125', 
+        # 'http://data.europa.eu/esco/skill/271a36a0-bc7a-43a9-ad29-0a3f3cac4e57',
+        # 'http://data.europa.eu/esco/skill/47ed1d37-971b-472c-86be-26f893991274',
+        # 'http://data.europa.eu/esco/skill/591dd514-735b-46e4-a28d-3a4c42f49b72',
+        # 'http://data.europa.eu/esco/skill/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
+        # 'http://data.europa.eu/esco/skill/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
+        # 'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96b9bca'
+        # ]
+
+        essentialSkills_uri = []
+        for essential in essentials:
+            for skill in essential:
+                essentialSkills_uri.append(skill['concept_uri'])
+                
+
+        person = ['http://data.europa.eu/esco/skill/591dd514-735b-46e4-a28d-3a4c42f49b72',
+        'http://data.europa.eu/esco/skill/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
+        'http://data.europa.eu/esco/skill/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
+        'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96b9bca',
+        'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96blalbla']
+
+        missing = get_differences(essentialSkills_uri,person)
+        returnSkill = []
+        for skill in missing:
+            for essential in essentials:
+                for sk in essential:
+                    if(sk['concept_uri'] == skill):
+                        returnSkill.append(serialize_skill(sk))
+        return returnSkill
+
+
 class ApiDocs(Resource):
     def get(self, path=None):
         if not path:
@@ -239,6 +403,9 @@ class ApiDocs(Resource):
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
 api.add_resource(SkillList, '/skills')
+api.add_resource(Skills, '/filterSkills')
+api.add_resource(SkillLabel, '/label')
+api.add_resource(MissingEssential, '/essentials')
 api.add_resource(OccupationList, '/occupations')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
