@@ -77,3 +77,8 @@ function saveCompetenices() {
 		console.log(selectedItems);
 }
 
+function getDropdown() {
+    occupancy = document.getElementById("occupency-select").value;
+    console.log(occupancy);
+}
+

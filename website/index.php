@@ -57,14 +57,14 @@
 	<div class="container">
 		<div class="row" id="user">
 			<label for="occupency-select">Planned occupency</label><br>
-			<select id="occupency-select">
+			<select id="occupency-select" onchange=getDropdown()>
 				<option class='occupation' value="none">none</option>
 				<?php
 				$json = file_get_contents('http://course-api-service/occupations');
 				$obj = json_decode($json);
 				$occupations = $obj;
 				foreach ($occupations as $occupation) {
-					echo "<option class='occupation' value='$occupation->OccupationUri'>$occupation->preferred_label</option>";
+					echo "<option class='occupation' value='$occupation->preferred_label'>$occupation->preferred_label</option>";
 				}
 				?>
 			</select>
