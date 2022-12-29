@@ -5,9 +5,6 @@ from classes import person
 from classes import job
 from classes import skill
 
-allskills = ["Java", "JavaScript", "TypeScript",
-             "Python", "PHP", "Linux", "Windows", "Docker", "REST"]
-
 link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/253045e3-969d-4882-957d-c68f014e3e6d?view=json"
 # link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/7f1bab8d-a88b-4186-bf1d-b78535c740cb?view=html"
 swagger_url = "http://localhost:5001/essentials?"
