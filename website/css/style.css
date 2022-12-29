@@ -31,7 +31,10 @@ display: list-item;
 	border:2px solid #ccc; 
 	width:300px; 
 	height:300px; 
-	overflow-y: scroll; }
+	overflow-y: scroll; 
+	min-height: 100px;
+	min-width: 300px;
+	resize: vertical;}
 
 
 hr {

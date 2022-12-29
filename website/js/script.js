@@ -70,9 +70,9 @@ function clearFilter() {
 
 function saveCompetenices() {
 		var items = document.getElementsByName("skill");
-		var selectedItems = "";
+		const selectedItems = [];
 		for (var i = 0; i < items.length; i++) {
-			if (items[i].type == "checkbox" && items[i].checked == true) selectedItems += items[i].value + "\n";
+			if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
 		}
 		console.log(selectedItems);
 }
