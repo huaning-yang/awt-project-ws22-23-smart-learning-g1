@@ -7,3 +7,11 @@ lxml==4.9.1
 neo4j==5.3.0
 flask-restful-swagger-2==0.35
 Flask-JSON==0.3.5
+en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.4.1/en_core_web_lg-3.4.1-py3-none-any.whl
+en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.4.1/en_core_web_md-3.4.1-py3-none-any.whl
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.1/en_core_web_sm-3.4.1-py3-none-any.whl
+requests==2.28.1
+requests-toolbelt==0.9.1
+spacy==3.4.4
+spacy-legacy==3.0.10
+spacy-loggers==1.0.4

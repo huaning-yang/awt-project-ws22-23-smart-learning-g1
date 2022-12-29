@@ -6,8 +6,9 @@ from classes import job
 allskills = ["Java", "JavaScript", "TypeScript",
              "Python", "PHP", "Linux", "Windows", "Docker", "REST"]
 
-link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/253045e3-969d-4882-957d-c68f014e3e6d?view=json"
-
+# link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/253045e3-969d-4882-957d-c68f014e3e6d?view=json"
+link = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/7f1bab8d-a88b-4186-bf1d-b78535c740cb?view=html"
+ 
 if link.endswith("html"):
     print("Converting to JSON...")
     link = link.replace("view=html", "view=json")
