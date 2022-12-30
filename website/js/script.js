@@ -1,4 +1,8 @@
 // JavaScript code
+
+var curr_occupancy = {}
+
+
 function search_course() {
 	let input = document.getElementById('searchbar').value
 	input = input.toLowerCase();
@@ -79,6 +83,24 @@ function saveCompetenices() {
 function getDropdown() {
     occupancy = document.getElementById("occupency-select").value;
     console.log(occupancy);
+	// console.log(encodeURIComponent(occupancy))
+
+	let xhr = new XMLHttpRequest();
+	xhr.open('get', 'http://localhost:5001/occupationsuri?occupation=' + encodeURIComponent(occupancy), true);
+	xhr.setRequestHeader("Content-type", "application/json");
+	xhr.send();
+
+	xhr.onload = function() {
+	    curr_occupancy = {
+			"OccupationUri": JSON.parse(xhr.response)[0][0],
+			"preferred_label": occupancy
+		  }
+	
+		console.log(curr_occupancy)
+	}
+	
+	
+
 }
 
 function recommendCourses() {
