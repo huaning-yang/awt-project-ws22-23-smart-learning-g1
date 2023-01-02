@@ -68,17 +68,17 @@ function clearFilter() {
 
 
 function saveCompetenices() {
-		var items = document.getElementsByName("skill");
-		const selectedItems = [];
-		for (var i = 0; i < items.length; i++) {
-			if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
-		}
-		console.log(selectedItems);
+	var items = document.getElementsByName("skill");
+	const selectedItems = [];
+	for (var i = 0; i < items.length; i++) {
+		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
+	}
+	console.log(selectedItems);
 }
 
 function getDropdown() {
-    occupancy = document.getElementById("occupency-select").value;
-    console.log(occupancy);
+	var sel = document.getElementById("occupency-select")
+	console.log(sel.options[sel.selectedIndex].text)
 }
 
 function recommendCourses() {
@@ -98,7 +98,7 @@ function recommendCourses() {
 		}
 	};
 
-	xhr.open("GET", "http://localhost:5001/essentials?occupationUri=" + encodeURIComponent(param), true);
+	xhr.open("GET", "http://localhost:5001/occupationessential?occupationUri=" + encodeURIComponent(param), true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send(null);
 }

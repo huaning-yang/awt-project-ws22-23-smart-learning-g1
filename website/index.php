@@ -64,7 +64,7 @@
 				$obj = json_decode($json);
 				$occupations = $obj;
 				foreach ($occupations as $occupation) {
-					echo "<option class='occupation' value='$occupation->preferred_label'>$occupation->preferred_label</option>";
+					echo "<option class='occupation' value='$occupation->OccupationUri'>$occupation->preferred_label</option>";
 				}
 				?>
 			</select>
