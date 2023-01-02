@@ -1,6 +1,9 @@
 // JavaScript code
 
-var curr_occupancy = {}
+var curr_occupancy = ""
+var saved_competencies = []
+
+
 
 
 function search_course() {
@@ -73,14 +76,20 @@ function clearFilter() {
 
 function saveCompetenices() {
 	var items = document.getElementsByName("skill");
-	const selectedItems = [];
+	var selectedItems = [];
 	for (var i = 0; i < items.length; i++) {
 		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
 	}
 	console.log(selectedItems);
+	setSavedCompetencies(selectedItems)
+	
 }
 
-function getDropdown() {
+function setSavedCompetencies(s) {
+	saved_competencies = s
+}
+
+function getOccupancy() {
 	var sel = document.getElementById("occupency-select")
 	var occupancy = sel.options[sel.selectedIndex].text
 	console.log(sel.options[sel.selectedIndex].text)
@@ -92,16 +101,28 @@ function getDropdown() {
 	xhr.send();
 
 	xhr.onload = function() {
-	    curr_occupancy = {
-			"OccupationUri": JSON.parse(xhr.response)[0][0],
-			"preferred_label": occupancy
-		  }
-	
-		console.log(curr_occupancy)
+	    curr_occupancy = JSON.parse(xhr.response)[0][0]
 	}
 	
-	
+}
 
+function postOccupancy(){
+	let xhr = new XMLHttpRequest();
+	xhr.open("POST", "http://localhost:5001/users");
+	xhr.setRequestHeader("Accept", "application/json");
+	xhr.setRequestHeader("Content-Type", "application/json");
+
+	xhr.onreadystatechange = function () {
+	  if (xhr.readyState === 4) {
+	    console.log(xhr.status);
+	    console.log(xhr.responseText);
+	  }};
+	console.log(JSON.stringify({
+		"OccupationUri": curr_occupancy,
+		"Competencies": saved_competencies}));
+	xhr.send(JSON.stringify({
+		"OccupationUri": curr_occupancy,
+		"Competencies": saved_competencies}));
 }
 
 function recommendCourses() {

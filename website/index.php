@@ -57,7 +57,7 @@
 	<div class="container">
 		<div class="row" id="user">
 			<label for="occupency-select">Planned occupency</label><br>
-			<select id="occupency-select" onchange=getDropdown()>
+			<select id="occupency-select" onchange=getOccupancy()>
 				<option class='occupation' value="none">none</option>
 				<?php
 				$json = file_get_contents('http://course-api-service/occupations');
@@ -102,13 +102,14 @@
 					
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
+				<input type="button" value="Commit" onclick=postOccupancy();>
 				<br>
 				<div class="container">
 					<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
 					<button type="button">Import europass</button>
 				</div>
 			</div>
-
+			<!--
 			<div class="row" id="search">
 				<form id="search-form" action="" method="POST" enctype="multipart/form-data">
 					<div class="form-group col-xs-9">
@@ -128,12 +129,13 @@
 							?>
 						</select>
 					</div>
+					
 					<div class="row" id="filter">
 						<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
 						<button type="submit" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
 						<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 					</div>
-
+					
 					<ol id='list'>
 
 						<?php
@@ -144,10 +146,10 @@
 							echo "<li class='course'>$course->course_name</li>";
 						}
 						?>
-						<!--\"neo4j+s://b367eb11. databases.neo4j.io\"In",
+						<!-- \"neo4j+s://b367eb11. databases.neo4j.io\"In",
 user = \"neo4i\"n"
 password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->
-					</ol>
+					</ol> -->
 					
 </body>
 

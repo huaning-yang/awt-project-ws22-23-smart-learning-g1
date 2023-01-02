@@ -96,11 +96,11 @@ class CourseList(Resource):
 class Courses(Resource):
     @swagger.doc({
         'tags': ['course'],
-        'summary': 'Find courses filtered by skill',
-        'description': 'Returns a list of courses filtered by skill',
+        'summary': 'Find courses filtered by skill_name',
+        'description': 'Returns a list of courses filtered by skill_name',
         'parameters': [
             {
-                'name': 'skill',
+                'name': 'skill_name',
                 'description': 'One or more skills to filter on',
                 'in': 'query',
                 'type': 'array',
@@ -113,7 +113,7 @@ class Courses(Resource):
         ],
         'responses': {
             '200': {
-                'description': 'A list of courses filtered by skill preferred label',
+                'description': 'A list of courses filtered by skill_name preferred label',
                 'schema': {
                     'type': 'array',
                     'items': CourseModel,
@@ -122,17 +122,17 @@ class Courses(Resource):
         }
     })
     def get(self):
-        skills = request.args.get('skill')
+        skills = request.args.get('skill_name')
         def get_filtered_courses(tx):
             return list(tx.run(
                 '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
-                WHERE skill.preferred_label in ["''' + ','.join(skills) +  '''"]
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
+                WHERE skill_name.preferred_label in ["''' + ','.join(skills) +  '''"]
                 RETURN course
                 '''
             ))
 
-        skills = request.args.getlist('skill')
+        skills = request.args.getlist('skill_name')
         print(skills)
         # return(skills)
         db = get_db()
@@ -155,7 +155,7 @@ class SkillModel(Schema):
 
 class SkillList(Resource):
     @swagger.doc({
-        'tags': ['skill'],
+        'tags': ['skill_name'],
         'summary': 'Find all skills',
         'description': 'Returns a list of skills',
         'responses': {
@@ -173,17 +173,17 @@ class SkillList(Resource):
             # For performance reasons limit for now
             return list(tx.run(
                 '''
-                MATCH (skill:Skill) RETURN skill LIMIT 25
+                MATCH (skill_name:Skill) RETURN skill_name LIMIT 25
                 '''
             ))
         db = get_db()
         result = db.execute_read(get_skills)
-        return [serialize_skill(record['skill']) for record in result]
+        return [serialize_skill(record['skill_name']) for record in result]
 
 class SkillLabel(Resource):
     @swagger.doc({
-        'tags': ['skill'],
-        'summary': 'find preferred label for a skill uri',
+        'tags': ['skill_name'],
+        'summary': 'find preferred label for a skill_name uri',
         'description': 'return a preferred label for list of skills',
         'parameters': [
             {
@@ -216,7 +216,7 @@ class SkillLabel(Resource):
 
 class Skills(Resource):
     @swagger.doc({
-        'tags': ['skill'],
+        'tags': ['skill_name'],
         'summary': 'Find skills filtered by course id',
         'description': 'Returns a list of skills filtered by courses',
         'parameters': [
@@ -247,20 +247,20 @@ class Skills(Resource):
         def get_filtered_skills(tx):
             return list(tx.run(
                 '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill:Skill)
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
                 WHERE course.course_id in ["''' + ','.join(courses) +  '''"]
-                RETURN skill
+                RETURN skill_name
                 '''
             ))
         db = get_db()
         result = db.execute_read(get_filtered_skills)
-        return [serialize_skill(record['skill']) for record in result]
+        return [serialize_skill(record['skill_name']) for record in result]
 
-def serialize_skill(skill):
+def serialize_skill(skill_name):
     return {
-        'concept_uri': skill['concept_uri'],
-        'description': skill['description'],
-        'preferred_label': skill['preferred_label']
+        'concept_uri': skill_name['concept_uri'],
+        'description': skill_name['description'],
+        'preferred_label': skill_name['preferred_label']
     }
 
 class OccupationModel(Schema):
@@ -465,7 +465,7 @@ class MissingEssential(Resource):
         # def get_personSkills(tx):
         #     return list(tx.run(
         #         '''
-        #         MATCH (p:person)-[:hasSkill]->(s:skill)
+        #         MATCH (p:person)-[:hasSkill]->(s:skill_name)
         #         WHERE p.id in ["''' + ','.join(personID) +  '''"]
         #         RETURN s
         #         '''
@@ -476,34 +476,34 @@ class MissingEssential(Resource):
         essentials = db.execute_read(get_essentialSkills)
         # skills = set(db.execute_read(get_personSkills))
         # return [x for x in essential if x not in skills]
-        # essential = ['http://data.europa.eu/esco/skill/fed5b267-73fa-461d-9f69-827c78beb39d', 
-        # 'http://data.europa.eu/esco/skill/05bc7677-5a64-4e0c-ade3-0140348d4125', 
-        # 'http://data.europa.eu/esco/skill/271a36a0-bc7a-43a9-ad29-0a3f3cac4e57',
-        # 'http://data.europa.eu/esco/skill/47ed1d37-971b-472c-86be-26f893991274',
-        # 'http://data.europa.eu/esco/skill/591dd514-735b-46e4-a28d-3a4c42f49b72',
-        # 'http://data.europa.eu/esco/skill/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
-        # 'http://data.europa.eu/esco/skill/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
-        # 'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96b9bca'
+        # essential = ['http://data.europa.eu/esco/skill_name/fed5b267-73fa-461d-9f69-827c78beb39d', 
+        # 'http://data.europa.eu/esco/skill_name/05bc7677-5a64-4e0c-ade3-0140348d4125', 
+        # 'http://data.europa.eu/esco/skill_name/271a36a0-bc7a-43a9-ad29-0a3f3cac4e57',
+        # 'http://data.europa.eu/esco/skill_name/47ed1d37-971b-472c-86be-26f893991274',
+        # 'http://data.europa.eu/esco/skill_name/591dd514-735b-46e4-a28d-3a4c42f49b72',
+        # 'http://data.europa.eu/esco/skill_name/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
+        # 'http://data.europa.eu/esco/skill_name/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
+        # 'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96b9bca'
         # ]
 
         essentialSkills_uri = []
         for essential in essentials:
-            for skill in essential:
-                essentialSkills_uri.append(skill['concept_uri'])
+            for skill_name in essential:
+                essentialSkills_uri.append(skill_name['concept_uri'])
                 
 
-        person = ['http://data.europa.eu/esco/skill/591dd514-735b-46e4-a28d-3a4c42f49b72',
-        'http://data.europa.eu/esco/skill/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
-        'http://data.europa.eu/esco/skill/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
-        'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96b9bca',
-        'http://data.europa.eu/esco/skill/f64fe2c2-d090-4e91-ba74-1355d96blalbla']
+        person = ['http://data.europa.eu/esco/skill_name/591dd514-735b-46e4-a28d-3a4c42f49b72',
+        'http://data.europa.eu/esco/skill_name/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
+        'http://data.europa.eu/esco/skill_name/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
+        'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96b9bca',
+        'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96blalbla']
 
         missing = get_differences(essentialSkills_uri,person)
         returnSkill = []
-        for skill in missing:
+        for skill_name in missing:
             for essential in essentials:
                 for sk in essential:
-                    if(sk['concept_uri'] == skill):
+                    if(sk['concept_uri'] == skill_name):
                         returnSkill.append(serialize_skill(sk))
         return returnSkill
 
@@ -530,13 +530,16 @@ class User(Resource):
 
     def post(self):
         user_arg = reqparse.RequestParser()
-        user_arg.add_argument("uri", type=str, help="This is a node name", required=True)
-        uri = user_arg.parse_args()["uri"]
-        user_uids = flatten(User.get(self))
+        user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
+        user_arg.add_argument("Competencies", action = "append", help="This is a list", required=True)
+
+        competencies = user_arg.parse_args()["Competencies"]
+        uri = user_arg.parse_args()["OccupationUri"]
+        user_uids = User.get(self)
         uid =  0 if not user_uids else max(user_uids) + 1
         name = f"User {uid}"
 
-        def write_user(tx, uri, uid, name):
+        def write_user_occupation(tx, uri, uid, name):
             result = tx.run(
                 ''' MATCH (o:Occupation) 
                     WHERE o.OccupationUri = $uri 
@@ -546,9 +549,23 @@ class User(Resource):
                 uri=uri, uid=uid, name=name)
             records = list(result)
             return records
+        
+        def write_user_competencies(tx, skill_name, uid):
+            result = tx.run(
+                ''' MATCH (u:User) 
+                    WHERE u.uid = $uid
+                    MATCH (s:Skill)     
+                    WHERE s.preferred_label = $skill_name
+                    CREATE (u) -[:hasSkill]-> (s) 
+                    RETURN *
+                ''', 
+                skill_name=skill_name, uid=uid)
+            records = list(result)
+            return records
         db = get_db()
-        result = db.execute_write(write_user, uri=uri, uid=uid, name=name)
-        return result
+        result_occ = db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
+        result_comp = [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
+        return result_occ.extend(result_comp)
     
 def flatten(l):
     return [item for sublist in l for item in sublist]   
