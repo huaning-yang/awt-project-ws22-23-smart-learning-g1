@@ -109,7 +109,7 @@
 					<button type="button">Import europass</button>
 				</div>
 			</div>
-			<!--
+			
 			<div class="row" id="search">
 				<form id="search-form" action="" method="POST" enctype="multipart/form-data">
 					<div class="form-group col-xs-9">
@@ -149,7 +149,7 @@
 						<!-- \"neo4j+s://b367eb11. databases.neo4j.io\"In",
 user = \"neo4i\"n"
 password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->
-					</ol> -->
+					</ol> 
 					
 </body>
 
