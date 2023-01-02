@@ -72,18 +72,19 @@ function clearFilter() {
 
 
 function saveCompetenices() {
-		var items = document.getElementsByName("skill");
-		const selectedItems = [];
-		for (var i = 0; i < items.length; i++) {
-			if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
-		}
-		console.log(selectedItems);
+	var items = document.getElementsByName("skill");
+	const selectedItems = [];
+	for (var i = 0; i < items.length; i++) {
+		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
+	}
+	console.log(selectedItems);
 }
 
 function getDropdown() {
-    occupancy = document.getElementById("occupency-select").value;
-    console.log(occupancy);
-	// console.log(encodeURIComponent(occupancy))
+	var sel = document.getElementById("occupency-select")
+	var occupancy = sel.options[sel.selectedIndex].text
+	console.log(sel.options[sel.selectedIndex].text)
+
 
 	let xhr = new XMLHttpRequest();
 	xhr.open('get', 'http://localhost:5001/occupationsuri?occupation=' + encodeURIComponent(occupancy), true);
@@ -120,7 +121,7 @@ function recommendCourses() {
 		}
 	};
 
-	xhr.open("GET", "http://localhost:5001/essentials?occupationUri=" + encodeURIComponent(param), true);
+	xhr.open("GET", "http://localhost:5001/occupationessential?occupationUri=" + encodeURIComponent(param), true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send(null);
 }

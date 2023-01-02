@@ -316,6 +316,84 @@ class OccupationURI(Resource):
         result = db.execute_read(get_uri)
         return result
 
+class OccupationEssential(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'description': 'Returns the essential skills of a occupation',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'One occupation (uri) for which the essential skills are needed',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of essential skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        def get_essential_skills(tx):
+                return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='essential'
+                RETURN s
+                '''
+            ))
+        db = get_db()
+        essentials = db.execute_read(get_essential_skills)
+        returnSkill = []
+        for essential in essentials:
+            for sk in essential:
+                returnSkill.append(serialize_skill(sk))
+        
+        return returnSkill
+
+class OccupationOptional(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'description': 'Returns the optional skills of a occupation',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'One occupation (uri) for which the essential skills are needed',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of optional skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        def get_optional_skills(tx):
+                return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='optional'
+                RETURN s
+                '''
+            ))
+        db = get_db()
+        optionals = db.execute_read(get_optional_skills)
+        returnSkill = []
+        for optional in optionals:
+            for sk in optional:
+                returnSkill.append(serialize_skill(sk))
+        return returnSkill
 class OccupationList(Resource):
     @swagger.doc({
         'tags': ['occupation'],
@@ -444,6 +522,8 @@ api.add_resource(SkillLabel, '/label')
 api.add_resource(MissingEssential, '/essentials')
 api.add_resource(OccupationList, '/occupations')
 api.add_resource(OccupationURI, '/occupationsuri')
+api.add_resource(OccupationEssential, '/occupationessential')
+api.add_resource(OccupationOptional, '/occupationoptional')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 
 # Run the application
