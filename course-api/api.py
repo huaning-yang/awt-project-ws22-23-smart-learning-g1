@@ -513,6 +513,45 @@ class ApiDocs(Resource):
         if not path:
             path = 'index.html'
         return send_from_directory('swaggerui', path)
+    
+
+class User(Resource):
+
+    def get(self):
+        def get_users(tx):
+            return set(tx.run(
+                '''
+                MATCH (u:User) RETURN u.uid
+                '''
+            ))
+        db = get_db()
+        result = flatten(db.execute_read(get_users))
+        return result
+
+    def post(self):
+        user_arg = reqparse.RequestParser()
+        user_arg.add_argument("uri", type=str, help="This is a node name", required=True)
+        uri = user_arg.parse_args()["uri"]
+        user_uids = flatten(User.get(self))
+        uid =  0 if not user_uids else max(user_uids) + 1
+        name = f"User {uid}"
+
+        def write_user(tx, uri, uid, name):
+            result = tx.run(
+                ''' MATCH (o:Occupation) 
+                    WHERE o.OccupationUri = $uri 
+                    MERGE (u:User {uid:$uid, name:$name}) -[:planned_occupation]-> (o) 
+                    RETURN *
+                ''', 
+                uri=uri, uid=uid, name=name)
+            records = list(result)
+            return records
+        db = get_db()
+        result = db.execute_write(write_user, uri=uri, uid=uid, name=name)
+        return result
+    
+def flatten(l):
+    return [item for sublist in l for item in sublist]   
 
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
@@ -525,6 +564,7 @@ api.add_resource(OccupationURI, '/occupationsuri')
 api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
+api.add_resource(User, '/users')
 
 # Run the application
 if __name__ == '__main__':
