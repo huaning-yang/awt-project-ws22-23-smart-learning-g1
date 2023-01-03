@@ -563,9 +563,12 @@ class User(Resource):
             records = list(result)
             return records
         db = get_db()
-        result_occ = db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
-        result_comp = [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
-        return result_occ.extend(result_comp)
+        db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
+        [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
+        return {
+                "username": name,
+                "userUID": uid
+        }
     
 def flatten(l):
     return [item for sublist in l for item in sublist]   
