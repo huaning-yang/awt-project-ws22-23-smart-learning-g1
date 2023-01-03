@@ -6,7 +6,6 @@ var required_skills = []
 var userID = -1
 
 
-
 function search_course() {
 	let input = document.getElementById('searchbar').value
 	input = input.toLowerCase();
