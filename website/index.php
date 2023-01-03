@@ -57,7 +57,7 @@
 	<div class="container">
 		<div class="row" id="user">
 			<label for="occupency-select">Planned occupency</label><br>
-			<select id="occupency-select" onchange=getOccupancy()>
+			<select id="occupency-select" onchange="getOccupancy(); updateExistingCompetencies();">
 				<option class='occupation' value="none">none</option>
 				<?php
 				$json = file_get_contents('http://course-api-service/occupations');
@@ -82,8 +82,8 @@
 
 					?> 
 				--> 
-				<div class="scrollable">
-					<form>
+				<div id="exist" class="scrollable">
+					<form id="existing-comp">
 					  
 						
 					  <?php
@@ -93,7 +93,7 @@
 
 					   foreach ($skills as $skill) {
 
-						echo  "<input type='checkbox' id='$skill->preferred_label' name='skill' value='$skill->preferred_label'> $skill->preferred_label <br>";
+						echo  "<input type='checkbox' id='$skill->preferred_label' class='existing-skill' name='skill' value='$skill->preferred_label'> $skill->preferred_label <br>";
 						
 					   }
 
@@ -116,6 +116,13 @@
 						<input id="searchbar" onkeyup="search_course()" class="form-control" type="text" name="search" placeholder="Search courses..">
 					</div>
 
+					<div class="row" id="recommendations">
+						<label for="recommendation-items">Recommendations</label><br>
+						<select multiple id="recommendation-items">
+
+						</select>
+					</div>
+
 					<div class="row" id="competencies">
 						<label for="competency-select">Filter Competencies</label><br>
 						<select multiple id="competency-select">
@@ -132,7 +139,7 @@
 					
 					<div class="row" id="filter">
 						<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
-						<button type="submit" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
+						<button type="button" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
 						<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 					</div>
 					
