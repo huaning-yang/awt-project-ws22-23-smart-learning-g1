@@ -439,7 +439,7 @@ class MissingEssential(Resource):
             'name': 'personID',
             'description': 'Identifier of a person',
             'in': 'query',
-            'type': 'string'
+            'type': 'integer'
         }],
         'responses': {
             '200': {
@@ -453,38 +453,23 @@ class MissingEssential(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
-        personID = request.args.getlist('personID')
+        personID = request.args.get('personID')
         def get_essentialSkills(tx):
             return list(tx.run(
                 '''
-                MATCH (o:Occupation)-[:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type="essential"
                 RETURN s
                 '''
             ))
-        # def get_personSkills(tx):
-        #     return list(tx.run(
-        #         '''
-        #         MATCH (p:person)-[:hasSkill]->(s:skill_name)
-        #         WHERE p.id in ["''' + ','.join(personID) +  '''"]
-        #         RETURN s
-        #         '''
-        #     ))
+        def get_personSkills(tx):
+            query = f'''MATCH (u:User)-[r:hasSkill]->(s:Skill) WHERE u.uid = {personID} RETURN s'''
+            return list(tx.run(query))
         def get_differences(essential, person):
             return [x for x in essential if x not in person]
         db = get_db()
         essentials = db.execute_read(get_essentialSkills)
-        # skills = set(db.execute_read(get_personSkills))
-        # return [x for x in essential if x not in skills]
-        # essential = ['http://data.europa.eu/esco/skill_name/fed5b267-73fa-461d-9f69-827c78beb39d', 
-        # 'http://data.europa.eu/esco/skill_name/05bc7677-5a64-4e0c-ade3-0140348d4125', 
-        # 'http://data.europa.eu/esco/skill_name/271a36a0-bc7a-43a9-ad29-0a3f3cac4e57',
-        # 'http://data.europa.eu/esco/skill_name/47ed1d37-971b-472c-86be-26f893991274',
-        # 'http://data.europa.eu/esco/skill_name/591dd514-735b-46e4-a28d-3a4c42f49b72',
-        # 'http://data.europa.eu/esco/skill_name/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
-        # 'http://data.europa.eu/esco/skill_name/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
-        # 'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96b9bca'
-        # ]
+        skills = set(db.execute_read(get_personSkills))
 
         essentialSkills_uri = []
         for essential in essentials:
@@ -492,11 +477,10 @@ class MissingEssential(Resource):
                 essentialSkills_uri.append(skill_name['concept_uri'])
                 
 
-        person = ['http://data.europa.eu/esco/skill_name/591dd514-735b-46e4-a28d-3a4c42f49b72',
-        'http://data.europa.eu/esco/skill_name/860be36a-d19b-4ba8-ae74-bc61b9f0bf63',
-        'http://data.europa.eu/esco/skill_name/93a68dcb-3dc6-4dbe-b196-f6d212228a50',
-        'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96b9bca',
-        'http://data.europa.eu/esco/skill_name/f64fe2c2-d090-4e91-ba74-1355d96blalbla']
+        person = []
+        for sk in skills:
+            for s in sk:
+                person.append(s['concept_uri'])
 
         missing = get_differences(essentialSkills_uri,person)
         returnSkill = []

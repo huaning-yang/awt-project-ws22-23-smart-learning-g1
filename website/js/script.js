@@ -3,6 +3,7 @@
 var curr_occupancy = ""
 var saved_competencies = []
 var required_skills = []
+var userID = -1
 
 
 
@@ -110,9 +111,9 @@ function postOccupancy() {
 	xhr.setRequestHeader("Content-Type", "application/json");
 
 	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			console.log(xhr.status);
-			console.log(xhr.responseText);
+		if (this.readyState === 4 && this.status == 200) {
+			var data = JSON.parse(this.responseText);
+			userID = data['userUID']
 		}
 	};
 	console.log(JSON.stringify({
@@ -175,14 +176,17 @@ function recommendCourses() {
 			data = this.responseText;
 			console.log(data);
 			var recommenderResponse = JSON.parse(data);
-			console.log(recommenderResponse)
+			var i, L = recommenderBox.options.length - 1;
+			for (i = L; i >= 0; i--) {
+				recommenderBox.remove(i)
+			}
 			for (const sk of recommenderResponse) {
 				recommenderBox.options[recommenderBox.options.length] = new Option(sk['preferred_label'], sk)
 			}
 		}
 	};
 
-	xhr.open("GET", "http://localhost:5001/occupationessential?occupationUri=" + encodeURIComponent(param), true);
+	xhr.open("GET", "http://localhost:5001/essentials?occupationUri=" + encodeURIComponent(param) + "&personID=" + userID, true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send();
 }
