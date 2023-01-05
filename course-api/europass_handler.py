@@ -26,13 +26,13 @@ else:
     firstName = cvJson["profile"]["personalInformation"]["firstName"]
     lastName = cvJson["profile"]["personalInformation"]["lastName"]
     uid = cvJson["profile"]["userId"]
-
     competence_uri = "http://localhost:5001/users"
 
     workExperiences = cvJson["profile"]["workExperiences"]
     for experience in workExperiences:
         occupation = job.Job(experience["occupation"]["label"], str(
             experience["mainActivities"]).replace("<p>", ""))
+        # print(f"occupation: {occupation.print()}\n")
         if "uri" in experience["occupation"]:
             occupation_uri = experience["occupation"]["uri"]
             occupation.uri = occupation_uri
@@ -48,14 +48,14 @@ else:
                 competencies.append(preferred_label)
                 usersskills.append(skill.Skill(
                     concept_uri, description, preferred_label))
-
+            
             body = {
                 "OccupationUri": occupation_uri,
                 "Competencies": competencies
             }
             response_post = requests.post(competence_uri, json=body)
             print(response_post)
-
+            break
         usersjobs.append(occupation)
 
 user1 = person.Person(firstName=firstName, lastName=lastName, id=uid)

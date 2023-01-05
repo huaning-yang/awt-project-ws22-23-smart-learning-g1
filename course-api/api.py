@@ -584,19 +584,22 @@ class Europass(Resource):
             for experience in workExperiences:
                 if "uri" in experience["occupation"]:
                     occupation = experience["occupation"]["uri"]
-                    occupation_uri = [str(occupation)]
+                    occupation_uri = str(occupation)
+                    occupation_uri_lst = [str(occupation)]
+                    print(occupation_uri)
 
                     def get_essential_skills(tx):
                             return list(tx.run(
                             '''
                             MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                            WHERE o.OccupationUri in ["''' + ','.join(occupation_uri) +  '''"] AND r.type='essential'
+                            WHERE o.OccupationUri in ["''' + ','.join(occupation_uri_lst) +  '''"] AND r.type='essential'
                             RETURN s
                             '''
                         ))
 
                     db = get_db()
                     essentials = db.execute_read(get_essential_skills)
+                    print("ess", essentials)
                     competencies = []
                     for essential in essentials:
                         for sk in essential:
@@ -611,10 +614,9 @@ class Europass(Resource):
 
                     db = get_db()
                     user_uids = flatten(db.execute_read(get_users))
-
-                    uid = 0 if not user_uids else max(user_uids) + 1000
+                    uid = 0 if not user_uids else max(user_uids) + 1
                     name = f"User-{uid} {u_name}"
-
+                    # print(user_uids, uid, name)
                     def write_occupation(tx, uri, uid, name):
                         result = tx.run(
                             ''' MATCH (o:Occupation) 
@@ -641,12 +643,13 @@ class Europass(Resource):
 
                     db = get_db()
                     db.execute_write(write_occupation, uri=occupation_uri, uid=uid, name=name)
-                    print(competencies)
+                    #print("Competencies:",  competencies)
                     preferred_labels = []
                     for c in competencies:
                         preferred_labels.append(c["preferred_label"])
                     [db.execute_write(write_competencies, skill_name=skill_name, uid=uid) for skill_name in
                      preferred_labels]
+                break
         return {
             "username": name,
             "userUID": uid
