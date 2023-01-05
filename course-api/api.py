@@ -612,10 +612,10 @@ class Europass(Resource):
                     db = get_db()
                     user_uids = flatten(db.execute_read(get_users))
 
-                    uid = 0 if not user_uids else max(user_uids) + 1
+                    uid = 0 if not user_uids else max(user_uids) + 1000
                     name = f"User-{uid} {u_name}"
 
-                    def write_user_occupation(tx, uri, uid, name):
+                    def write_occupation(tx, uri, uid, name):
                         result = tx.run(
                             ''' MATCH (o:Occupation) 
                                 WHERE o.OccupationUri = $uri 
@@ -626,7 +626,7 @@ class Europass(Resource):
                         records = list(result)
                         return records
 
-                    def write_user_competencies(tx, skill_name, uid):
+                    def write_competencies(tx, skill_name, uid):
                         result = tx.run(
                             ''' MATCH (u:User) 
                                 WHERE u.uid = $uid
@@ -640,13 +640,19 @@ class Europass(Resource):
                         return records
 
                     db = get_db()
-                    db.execute_write(write_user_occupation, uri=occupation_uri, uid=uid, name=name)
-                    [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in
-                     competencies]
+                    db.execute_write(write_occupation, uri=occupation_uri, uid=uid, name=name)
+                    print(competencies)
+                    preferred_labels = []
+                    for c in competencies:
+                        preferred_labels.append(c["preferred_label"])
+                    [db.execute_write(write_competencies, skill_name=skill_name, uid=uid) for skill_name in
+                     preferred_labels]
         return {
             "username": name,
             "userUID": uid
         }
+        # return preferred_labels
+
 def flatten(l):
     return [item for sublist in l for item in sublist]
 
