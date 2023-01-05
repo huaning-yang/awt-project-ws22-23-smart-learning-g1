@@ -8,6 +8,9 @@ from flask_restful_swagger_2 import Api, swagger, Schema
 from flask_json import FlaskJSON, json_response
 import sqlite3
 
+from urllib.request import urlopen
+import json
+
 from neo4j import GraphDatabase, basic_auth
 from neo4j.exceptions import Neo4jError
 import neo4j.time
@@ -553,9 +556,99 @@ class User(Resource):
                 "username": name,
                 "userUID": uid
         }
-    
+class Europass(Resource):
+    def post(self):
+        user_arg = reqparse.RequestParser()
+        user_arg.add_argument("EuropassUri", type=str, help="This is a europass cv link", required=True)
+
+        link_europass_cv = user_arg.parse_args()["EuropassUri"]
+        # link_europass_cv = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/4d1ede99-9838-4bcc-bfdc-3bacd8d5fe99?view=html"
+
+        if link_europass_cv.endswith("html"):
+            print("Converting to JSON...")
+            link_europass_cv = link_europass_cv.replace("view=html", "view=json")
+
+        if not link_europass_cv.startswith("https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/"):
+            print(
+                "Incorrect link. the only format supported is the europass one. Please go to https://ecas.ec.europa.eu/cas/. Create an account, then create your cv. Finally create an export link to share your cv.")
+        else:
+            f = urlopen(link_europass_cv)
+            myfile = f.read()
+
+            cvJson = json.loads(myfile)
+            firstName = cvJson["profile"]["personalInformation"]["firstName"]
+            lastName = cvJson["profile"]["personalInformation"]["lastName"]
+            u_name = firstName+"-"+lastName
+
+            workExperiences = cvJson["profile"]["workExperiences"]
+            for experience in workExperiences:
+                if "uri" in experience["occupation"]:
+                    occupation = experience["occupation"]["uri"]
+                    occupation_uri = [str(occupation)]
+
+                    def get_essential_skills(tx):
+                            return list(tx.run(
+                            '''
+                            MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                            WHERE o.OccupationUri in ["''' + ','.join(occupation_uri) +  '''"] AND r.type='essential'
+                            RETURN s
+                            '''
+                        ))
+
+                    db = get_db()
+                    essentials = db.execute_read(get_essential_skills)
+                    competencies = []
+                    for essential in essentials:
+                        for sk in essential:
+                            competencies.append(serialize_skill(sk))
+
+                    def get_users(tx):
+                        return set(tx.run(
+                            '''
+                            MATCH (u:User) RETURN u.uid
+                            '''
+                        ))
+
+                    db = get_db()
+                    user_uids = flatten(db.execute_read(get_users))
+
+                    uid = 0 if not user_uids else max(user_uids) + 1
+                    name = f"User-{uid} {u_name}"
+
+                    def write_user_occupation(tx, uri, uid, name):
+                        result = tx.run(
+                            ''' MATCH (o:Occupation) 
+                                WHERE o.OccupationUri = $uri 
+                                MERGE (u:User {uid:$uid, name:$name}) -[:planned_occupation]-> (o) 
+                                RETURN *
+                            ''',
+                            uri=uri, uid=uid, name=name)
+                        records = list(result)
+                        return records
+
+                    def write_user_competencies(tx, skill_name, uid):
+                        result = tx.run(
+                            ''' MATCH (u:User) 
+                                WHERE u.uid = $uid
+                                MATCH (s:Skill)     
+                                WHERE s.preferred_label = $skill_name
+                                CREATE (u) -[:hasSkill]-> (s) 
+                                RETURN *
+                            ''',
+                            skill_name=skill_name, uid=uid)
+                        records = list(result)
+                        return records
+
+                    db = get_db()
+                    db.execute_write(write_user_occupation, uri=occupation_uri, uid=uid, name=name)
+                    [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in
+                     competencies]
+        return {
+            "username": name,
+            "userUID": uid
+        }
 def flatten(l):
-    return [item for sublist in l for item in sublist]   
+    return [item for sublist in l for item in sublist]
 
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
@@ -569,6 +662,7 @@ api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 api.add_resource(User, '/users')
+api.add_resource(Europass, '/europass')
 
 # Run the application
 if __name__ == '__main__':

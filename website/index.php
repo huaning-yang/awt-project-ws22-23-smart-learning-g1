@@ -104,10 +104,42 @@
 				<input type="button" value="Save" onclick=saveCompetenices();>
 				<input type="button" value="Commit" onclick=postOccupancy();>
 				<br>
-				<div class="container">
-					<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
-					<button type="button">Import europass</button>
-				</div>
+
+                <div class="container">
+                    <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
+                    <button id ="europassbtn" type="button">Import Europass</button>
+                </div>
+                <p class="output" id="output1"></p>
+                <script>
+                    const europass_url = document.getElementById('europassURL');
+                    const europass_btn = document.getElementById('europassbtn');
+                    const out1 = document.getElementById('output1');
+
+                    function func(){
+                        let xhr = new XMLHttpRequest();
+                        xhr.open("POST", "http://localhost:5001/europass");
+                        xhr.setRequestHeader("Accept", "application/json");
+                        xhr.setRequestHeader("Content-Type", "application/json");
+
+                        xhr.onreadystatechange = function () {
+                          if (xhr.readyState === XMLHttpRequest.DONE) {
+                            console.log(xhr.status);
+                            console.log(xhr.responseText);
+                          }};
+
+                        let data = JSON.stringify({"EuropassUri": europass_url});
+
+                        xhr.send(data);
+                        if (status === 0 || (status >= 200 && status < 400)) {
+                          // The request has been completed successfully
+                          console.log(xhr.responseText);
+                        } else{
+                          alert(`Error ${xhr.status}: ${xhr.statusText}`);
+                        }
+                        out1.innerHTML = europass_url;
+                    }
+                    europass_btn.addEventListener('click',func);
+                </script>
 			</div>
 			
 			<div class="row" id="search">
