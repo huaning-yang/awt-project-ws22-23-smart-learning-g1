@@ -112,7 +112,7 @@ function postOccupation() {
 	xhr.onreadystatechange = function () {
 		if (this.readyState === 4 && this.status == 200) {
 			var data = JSON.parse(this.responseText);
-			userID = data['userUID']
+			
 		}
 	};
 	console.log(JSON.stringify({
@@ -188,4 +188,25 @@ function recommendCourses() {
 	xhr.open("GET", "http://localhost:5001/essentials?occupationUri=" + encodeURIComponent(param) + "&personID=" + userID, true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send();
+}
+
+function parseEuropass() {
+	const europass_url = document.getElementById('europassURL').value
+
+	let xhr = new XMLHttpRequest();
+	xhr.open("POST", "http://localhost:5001/europass");
+	xhr.setRequestHeader("Accept", "application/json");
+	xhr.setRequestHeader("Content-Type", "application/json");
+
+	xhr.onreadystatechange = function () {
+		if (this.readyState === 4 && this.status == 200) {
+			var data = JSON.parse(this.responseText);
+		}
+	};
+	console.log(JSON.stringify({
+		"EuropassUri": europass_url
+	}));
+	xhr.send(JSON.stringify({
+		"EuropassUri": europass_url
+	}));
 }
