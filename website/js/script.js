@@ -21,7 +21,7 @@ function search_course() {
 }
 
 function filterCourses() {
-	const selected = document.querySelectorAll('#competency-select option:checked');
+	const selected = document.querySelectorAll('#recommendation-items option:checked');
 	const values = Array.from(selected).map(el => el.value);
 
 	var params = "?";
@@ -46,7 +46,7 @@ function filterCourses() {
 				var course = coursesResponse[j];
 				// console.log(course.course_name);
 				for (i = 0; i < x.length; i++) {
-					if (x[i].innerHTML.includes(course.course_name)) {
+					if (x[i].dataset['uuid'].includes(course.course_id)){
 						x[i].style.display = "list-item";
 					}
 				}
@@ -180,7 +180,7 @@ function recommendCourses() {
 				recommenderBox.remove(i)
 			}
 			for (const sk of recommenderResponse) {
-				recommenderBox.options[recommenderBox.options.length] = new Option(sk['preferred_label'], sk)
+				recommenderBox.options[recommenderBox.options.length] = new Option(sk['preferred_label'], sk['concept_uri'])
 			}
 		}
 	};

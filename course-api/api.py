@@ -99,11 +99,11 @@ class CourseList(Resource):
 class Courses(Resource):
     @swagger.doc({
         'tags': ['course'],
-        'summary': 'Find courses filtered by skill_name',
-        'description': 'Returns a list of courses filtered by skill_name',
+        'summary': 'Find courses filtered by skill_uid',
+        'description': 'Returns a list of courses filtered by skill_uid',
         'parameters': [
             {
-                'name': 'skill_name',
+                'name': 'skill_uid',
                 'description': 'One or more skills to filter on',
                 'in': 'query',
                 'type': 'array',
@@ -116,7 +116,7 @@ class Courses(Resource):
         ],
         'responses': {
             '200': {
-                'description': 'A list of courses filtered by skill_name preferred label',
+                'description': 'A list of courses filtered by skill_uid',
                 'schema': {
                     'type': 'array',
                     'items': CourseModel,
@@ -125,17 +125,17 @@ class Courses(Resource):
         }
     })
     def get(self):
-        skills = request.args.get('skill_name')
+        skills = request.args.get('skill')
         def get_filtered_courses(tx):
             return list(tx.run(
                 '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
-                WHERE skill_name.preferred_label in ["''' + ','.join(skills) +  '''"]
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in ["''' + ','.join(skills) +  '''"]
                 RETURN course
                 '''
             ))
 
-        skills = request.args.getlist('skill_name')
+        skills = request.args.getlist('skill')
         print(skills)
         # return(skills)
         db = get_db()

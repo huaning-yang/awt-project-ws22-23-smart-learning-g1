@@ -155,40 +155,40 @@
 						</select>
 					</div>
 
-					<div class="row" id="competencies">
+					<!-- <div class="row" id="competencies">
 						<label for="competency-select">Filter Competencies</label><br>
 						<select multiple id="competency-select">
-							<?php
-							$json = file_get_contents('http://course-api-service/skills');
-							$obj = json_decode($json);
-							$skills = $obj;
-							foreach ($skills as $skill) {
-								echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
-							}
-							?>
+							<!-- <?php
+							// $json = file_get_contents('http://course-api-service/skills');
+							// $obj = json_decode($json);
+							// $skills = $obj;
+							// foreach ($skills as $skill) {
+							// 	echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
+							// }
+							?> -->
 						</select>
-					</div>
+					</div> -->
 					
 					<div class="row" id="filter">
-						<button type="submit" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
+						<button type="button" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
 						<button type="button" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
-						<button type="submit" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 					</div>
 					
-					<ol id='list'>
+					<ul id='list'>
 
 						<?php
 						$json = file_get_contents('http://course-api-service/');
 						$obj = json_decode($json);
 						$courses = $obj;
 						foreach ($courses as $course) {
-							echo "<li class='course'>$course->course_name</li>";
+							echo "<li class='course' data-UUID='$course->course_id'>$course->course_name</li>";
 						}
 						?>
 						<!-- \"neo4j+s://b367eb11. databases.neo4j.io\"In",
 user = \"neo4i\"n"
 password = \"2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE\"\n", -->
-					</ol> 
+					</ul> 
 					
 </body>
 
