@@ -1,6 +1,6 @@
 // JavaScript code
 
-var curr_occupancy = ""
+var curr_occupation = ""
 var saved_competencies = []
 var required_skills = []
 var userID = -1
@@ -86,24 +86,24 @@ function setSavedCompetencies(s) {
 	saved_competencies = s
 }
 
-function getOccupancy() {
-	var sel = document.getElementById("occupency-select")
-	var occupancy = sel.options[sel.selectedIndex].text
+function getOccupation() {
+	var sel = document.getElementById("occupation-select")
+	var occupation = sel.options[sel.selectedIndex].text
 	console.log(sel.options[sel.selectedIndex].text)
 
 
 	let xhr = new XMLHttpRequest();
-	xhr.open('get', 'http://localhost:5001/occupationsuri?occupation=' + encodeURIComponent(occupancy), true);
+	xhr.open('get', 'http://localhost:5001/occupationsuri?occupation=' + encodeURIComponent(occupation), true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send();
 
 	xhr.onload = function () {
-		curr_occupancy = JSON.parse(xhr.response)[0][0]
+		curr_occupation = JSON.parse(xhr.response)[0][0]
 	}
 
 }
 
-function postOccupancy() {
+function postOccupation() {
 	let xhr = new XMLHttpRequest();
 	xhr.open("POST", "http://localhost:5001/users");
 	xhr.setRequestHeader("Accept", "application/json");
@@ -116,17 +116,17 @@ function postOccupancy() {
 		}
 	};
 	console.log(JSON.stringify({
-		"OccupationUri": curr_occupancy,
+		"OccupationUri": curr_occupation,
 		"Competencies": saved_competencies
 	}));
 	xhr.send(JSON.stringify({
-		"OccupationUri": curr_occupancy,
+		"OccupationUri": curr_occupation,
 		"Competencies": saved_competencies
 	}));
 }
 
 function updateExistingCompetencies() {
-	const selectedOccupation = document.getElementById("occupency-select").value;
+	const selectedOccupation = document.getElementById("occupation-select").value;
 	console.log(selectedOccupation)
 	const exisitingCompetencies = document.getElementById("existing-comp");
 	var box = document.getElementById("exist")
@@ -163,7 +163,7 @@ function updateExistingCompetencies() {
 }
 
 function recommendCourses() {
-	const selectedOccupation = document.getElementById("occupency-select").value;
+	const selectedOccupation = document.getElementById("occupation-select").value;
 	const recommenderBox = document.getElementById("recommendation-items")
 	var param = selectedOccupation;
 

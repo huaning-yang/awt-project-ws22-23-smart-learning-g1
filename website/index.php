@@ -56,8 +56,8 @@
 	<hr>
 	<div class="container">
 		<div class="row" id="user">
-			<label for="occupency-select">Planned occupency</label><br>
-			<select id="occupency-select" onchange="getOccupancy(); updateExistingCompetencies();">
+			<label for="occupation-select">Planned Occupation</label><br>
+			<select id="occupation-select" onchange="getOccupation(); updateExistingCompetencies();">
 				<option class='occupation' value="none">none</option>
 				<?php
 				$json = file_get_contents('http://course-api-service/occupations');
@@ -102,7 +102,7 @@
 					
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
-				<input type="button" value="Commit" onclick=postOccupancy();>
+				<input type="button" value="Commit" onclick=postOccupation();>
 				<br>
 
                 <div class="container">
