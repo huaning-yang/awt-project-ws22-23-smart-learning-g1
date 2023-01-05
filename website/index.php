@@ -127,16 +127,11 @@
                             console.log(xhr.responseText);
                           }};
 
-                        let data = JSON.stringify({"EuropassUri": europass_url});
+                        let data = JSON.stringify({"EuropassUri": europass_url.value});
+//                         let data = {"EuropassUri": europass_url.value};
 
                         xhr.send(data);
-                        if (status === 0 || (status >= 200 && status < 400)) {
-                          // The request has been completed successfully
-                          console.log(xhr.responseText);
-                        } else{
-                          alert(`Error ${xhr.status}: ${xhr.statusText}`);
-                        }
-                        out1.innerHTML = europass_url;
+                        out1.innerHTML = "DB actualised using: " + europass_url.value;
                     }
                     europass_btn.addEventListener('click',func);
                 </script>
