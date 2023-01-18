@@ -87,7 +87,7 @@ class CourseList(Resource):
         def get_courses(tx):
             return list(tx.run(
                 '''
-                MATCH (course:Course) RETURN course
+                MATCH (course:Course) RETURN course LIMIT 30
                 '''
             ))
         db = get_db()

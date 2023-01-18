@@ -190,23 +190,24 @@ function recommendCourses() {
 	xhr.send();
 }
 
-function parseEuropass() {
-	const europass_url = document.getElementById('europassURL').value
+function processEuropassLink(){
+	const europass_url = document.getElementById('europassURL');
+    const out1 = document.getElementById('output1');
 
 	let xhr = new XMLHttpRequest();
 	xhr.open("POST", "http://localhost:5001/europass");
 	xhr.setRequestHeader("Accept", "application/json");
 	xhr.setRequestHeader("Content-Type", "application/json");
 
-	xhr.onreadystatechange = function () {
-		if (this.readyState === 4 && this.status == 200) {
-			var data = JSON.parse(this.responseText);
-		}
-	};
-	console.log(JSON.stringify({
-		"EuropassUri": europass_url
-	}));
-	xhr.send(JSON.stringify({
-		"EuropassUri": europass_url
-	}));
-}
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }};
+
+    let data = JSON.stringify({"EuropassUri": europass_url.value});
+//                    let data = {"EuropassUri": europass_url.value};
+
+    xhr.send(data);
+    out1.innerHTML = "DB actualised using: " + europass_url.value;
+    }
