@@ -107,34 +107,10 @@
 
                 <div class="container">
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
-                    <button id ="europassbtn" type="button">Import Europass</button>
+                    <button id ="europassbtn" type="button" onclick=processEuropassLink() >Import Europass</button>
                 </div>
                 <p class="output" id="output1"></p>
-                <script>
-                    const europass_url = document.getElementById('europassURL');
-                    const europass_btn = document.getElementById('europassbtn');
-                    const out1 = document.getElementById('output1');
 
-                    function func(){
-                        let xhr = new XMLHttpRequest();
-                        xhr.open("POST", "http://localhost:5001/europass");
-                        xhr.setRequestHeader("Accept", "application/json");
-                        xhr.setRequestHeader("Content-Type", "application/json");
-
-                        xhr.onreadystatechange = function () {
-                          if (xhr.readyState === XMLHttpRequest.DONE) {
-                            console.log(xhr.status);
-                            console.log(xhr.responseText);
-                          }};
-
-                        let data = JSON.stringify({"EuropassUri": europass_url.value});
-//                         let data = {"EuropassUri": europass_url.value};
-
-                        xhr.send(data);
-                        out1.innerHTML = "DB actualised using: " + europass_url.value;
-                    }
-                    europass_btn.addEventListener('click',func);
-                </script>
 			</div>
 			
 			<div class="row" id="search">
