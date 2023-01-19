@@ -1,28 +1,11 @@
 // JavaScript code
 
 var curr_occupation = ""
+var existing_occupations = []
 var saved_competencies = []
 var required_skills = []
 var userID = -1
-var uid;
 
-function render(){
-	let xhr = new XMLHttpRequest();
-	xhr.open('get', 'http://localhost:5001/users', true);
-	xhr.setRequestHeader("Content-type", "application/json");
-	xhr.send();
-
-	xhr.onload = function () {
-		if (!JSON.parse(xhr.response).length) {
-			uid = 0
-		} else {
-			uid = JSON.parse(xhr.response)[0]
-		}
-		console.log(uid)
-	}
-}
-
-window.onload = render;
 
 function search_course() {
 	let input = document.getElementById('searchbar').value
@@ -127,20 +110,21 @@ function postOccupation() {
 	xhr.setRequestHeader("Accept", "application/json");
 	xhr.setRequestHeader("Content-Type", "application/json");
 
-	xhr.onreadystatechange = function () {
-		if (this.readyState === 4 && this.status == 200) {
-			var data = JSON.parse(this.responseText);
-			
-		}
-	};
 	console.log(JSON.stringify({
 		"OccupationUri": curr_occupation,
 		"Competencies": saved_competencies
 	}));
 	xhr.send(JSON.stringify({
 		"OccupationUri": curr_occupation,
-		"Competencies": saved_competencies
+		"Competencies": saved_competencies,
+		"ExistingOccupations": existing_occupations
 	}));
+	xhr.onreadystatechange = function () {
+		if (this.readyState === 4 && this.status == 200) {
+			console.log(JSON.parse(this.responseText));
+			
+		}
+	};
 }
 
 function updateExistingCompetencies() {
@@ -208,7 +192,7 @@ function recommendCourses() {
 	xhr.send();
 }
 
-function processEuropassLink(){
+/* function processEuropassLink(){
 	const europass_url = document.getElementById('europassURL');
     const out1 = document.getElementById('output1');
 
@@ -228,4 +212,24 @@ function processEuropassLink(){
 
     xhr.send(data);
     out1.innerHTML = "DB actualised using: " + europass_url.value;
-    }
+    } */
+
+function storeEuropassSkills(){
+	const europass_url = document.getElementById('europassURL').value;
+	const out1 = document.getElementById('output1');
+	
+	let xhr = new XMLHttpRequest();
+	xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
+	xhr.setRequestHeader("Accept", "application/json");
+	xhr.send();
+
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+		  console.log(xhr.status);
+		  existing_occupations = existing_occupations.concat(JSON.parse(xhr.responseText)["occupations"]);
+		  saved_competencies = saved_competencies.concat(JSON.parse(xhr.responseText)["preferred_labels"]);
+		  console.log(existing_occupations)
+		  console.log(saved_competencies)	
+		}};
+	out1.innerHTML = "Europass imported";
+	}

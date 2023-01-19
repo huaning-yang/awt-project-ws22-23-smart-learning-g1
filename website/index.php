@@ -107,7 +107,7 @@
 
                 <div class="container">
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
-                    <button id ="europassbtn" type="button" onclick=processEuropassLink() >Import Europass</button>
+                    <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>
                 </div>
                 <p class="output" id="output1"></p>
 
