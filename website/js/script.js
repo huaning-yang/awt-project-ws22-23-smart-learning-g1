@@ -4,7 +4,25 @@ var curr_occupation = ""
 var saved_competencies = []
 var required_skills = []
 var userID = -1
+var uid;
 
+function render(){
+	let xhr = new XMLHttpRequest();
+	xhr.open('get', 'http://localhost:5001/users', true);
+	xhr.setRequestHeader("Content-type", "application/json");
+	xhr.send();
+
+	xhr.onload = function () {
+		if (!JSON.parse(xhr.response).length) {
+			uid = 0
+		} else {
+			uid = JSON.parse(xhr.response)[0]
+		}
+		console.log(uid)
+	}
+}
+
+window.onload = render;
 
 function search_course() {
 	let input = document.getElementById('searchbar').value

@@ -501,20 +501,73 @@ class ApiDocs(Resource):
             path = 'index.html'
         return send_from_directory('swaggerui', path)
     
-
 class User(Resource):
+    @swagger.doc({
+        'tags': ['users'],
+        'description': 'Retrieve the uid of the last user in the database',
+        'responses': {
+            '200': {
+                'description': 'Successful retrieval of user uid',
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'integer'
+                    }
+                }
+            }
+        }
+    })
 
     def get(self):
         def get_users(tx):
             return set(tx.run(
                 '''
-                MATCH (u:User) RETURN u.uid
+                MATCH (n:User) RETURN n.uid ORDER BY n.uid desc LIMIT 1
                 '''
             ))
         db = get_db()
         result = flatten(db.execute_read(get_users))
         return result
-
+    
+    @swagger.doc({
+        'tags': ['users'],
+        'description': 'Create a new user with occupation and competencies',
+        'parameters': [
+            {
+                'name': 'OccupationUri',
+                'description': 'The occupation uri of the user',
+                'in': 'formData',
+                'type': 'string',
+                'required': True
+            },
+            {
+                'name': 'Competencies',
+                'description': 'Competencies of the user',
+                'in': 'formData',
+                'type': 'array',
+                'items': {
+                    'type': 'string'
+                },
+                'required': True
+            }
+        ],
+        'responses': {
+            '201': {
+                'description': 'Successful creation of user',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'username': {
+                            'type': 'string'
+                        },
+                        'userUID': {
+                            'type': 'integer'
+                        }
+                    }
+                }
+            }
+        }
+    })
     def post(self):
         user_arg = reqparse.RequestParser()
         user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
@@ -578,7 +631,21 @@ class Europass(Resource):
             cvJson = json.loads(myfile)
             firstName = cvJson["profile"]["personalInformation"]["firstName"]
             lastName = cvJson["profile"]["personalInformation"]["lastName"]
+            uid_europass = cvJson["profile"]["userId"]
             u_name = firstName+"-"+lastName
+
+            ## Retrieve user id 
+            def get_users(tx):
+                        return set(tx.run(
+                            '''
+                            MATCH (u:User) RETURN u.uid
+                            '''
+                        ))
+
+            db = get_db()
+            user_uids = flatten(db.execute_read(get_users))
+            uid = 0 if not user_uids else max(user_uids) + 1
+            name = f"User-{uid} {u_name}"
 
             workExperiences = cvJson["profile"]["workExperiences"]
             for experience in workExperiences:
@@ -605,17 +672,6 @@ class Europass(Resource):
                         for sk in essential:
                             competencies.append(serialize_skill(sk))
 
-                    def get_users(tx):
-                        return set(tx.run(
-                            '''
-                            MATCH (u:User) RETURN u.uid
-                            '''
-                        ))
-
-                    db = get_db()
-                    user_uids = flatten(db.execute_read(get_users))
-                    uid = 0 if not user_uids else max(user_uids) + 1
-                    name = f"User-{uid} {u_name}"
                     # print(user_uids, uid, name)
                     def write_occupation(tx, uri, uid, name):
                         result = tx.run(
@@ -649,7 +705,6 @@ class Europass(Resource):
                         preferred_labels.append(c["preferred_label"])
                     [db.execute_write(write_competencies, skill_name=skill_name, uid=uid) for skill_name in
                      preferred_labels]
-                break
         return {
             "username": name,
             "userUID": uid
