@@ -78,8 +78,8 @@ function saveCompetenices() {
 	for (var i = 0; i < items.length; i++) {
 		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
 	}
-	console.log(selectedItems);
-	setSavedCompetencies(selectedItems)
+	saved_competencies = saved_competencies.concat(selectedItems)
+	console.log(saved_competencies);
 
 }
 
@@ -192,28 +192,6 @@ function recommendCourses() {
 	xhr.send();
 }
 
-/* function processEuropassLink(){
-	const europass_url = document.getElementById('europassURL');
-    const out1 = document.getElementById('output1');
-
-	let xhr = new XMLHttpRequest();
-	xhr.open("POST", "http://localhost:5001/europass");
-	xhr.setRequestHeader("Accept", "application/json");
-	xhr.setRequestHeader("Content-Type", "application/json");
-
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        console.log(xhr.status);
-        console.log(xhr.responseText);
-      }};
-
-    let data = JSON.stringify({"EuropassUri": europass_url.value});
-//                    let data = {"EuropassUri": europass_url.value};
-
-    xhr.send(data);
-    out1.innerHTML = "DB actualised using: " + europass_url.value;
-    } */
-
 function storeEuropassSkills(){
 	const europass_url = document.getElementById('europassURL').value;
 	const out1 = document.getElementById('output1');
@@ -228,8 +206,20 @@ function storeEuropassSkills(){
 		  console.log(xhr.status);
 		  existing_occupations = existing_occupations.concat(JSON.parse(xhr.responseText)["occupations"]);
 		  saved_competencies = saved_competencies.concat(JSON.parse(xhr.responseText)["preferred_labels"]);
-		  console.log(existing_occupations)
-		  console.log(saved_competencies)	
+		  checkCheckboxes();
 		}};
 	out1.innerHTML = "Europass imported";
+
+
 	}
+
+function checkCheckboxes(){
+	const checkboxes = document.getElementsByName("skill")
+	
+	for (const cb of checkboxes) {
+		if (saved_competencies.includes(cb.value)){
+			cb.checked = true;
+		}
+	}
+
+}

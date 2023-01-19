@@ -102,7 +102,7 @@
 					
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
-				<input type="button" value="Commit" onclick=postOccupation();>
+				
 				<br>
 
                 <div class="container">
@@ -110,7 +110,9 @@
                     <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>
                 </div>
                 <p class="output" id="output1"></p>
-
+				<div class="container">
+					<input type="button" value="Commit" onclick=postOccupation();> 
+				</div>
 			</div>
 			
 			<div class="row" id="search">

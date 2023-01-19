@@ -529,45 +529,52 @@ class User(Resource):
         result = flatten(db.execute_read(get_users))
         return result
     
-    @swagger.doc({
-        'tags': ['users'],
-        'description': 'Create a new user with occupation and competencies',
-        'parameters': [
-            {
-                'name': 'OccupationUri',
-                'description': 'The occupation uri of the user',
-                'in': 'formData',
-                'type': 'string',
-                'required': True
-            },
-            {
-                'name': 'Competencies',
-                'description': 'Competencies of the user',
-                'in': 'formData',
-                'type': 'array',
-                'items': {
-                    'type': 'string'
-                },
-                'required': True
-            }
-        ],
-        'responses': {
-            '200': {
-                'description': 'Successful creation of user',
-                'schema': {
-                    'type': 'object',
-                    'properties': {
-                        'username': {
-                            'type': 'string'
-                        },
-                        'userUID': {
-                            'type': 'integer'
-                        }
-                    }
-                }
-            }
-        }
-    })
+    # @swagger.doc({
+    #     'tags': ['User'],
+    #     'description': 'Create a new user and associate them with an occupation and competencies',
+    #     'parameters': [
+    #         {
+    #             'name': 'OccupationUri',
+    #             'description': 'The URI of the occupation to associate the user with',
+    #             'required': True,
+    #             'type': 'string'
+    #         },
+    #         {
+    #             'name': 'Competencies',
+    #             'description': 'A list of competencies to associate the user with',
+    #             'required': True,
+    #             'type': 'array',
+    #             'items': {
+    #                 'type': 'string'
+    #             }
+    #         },
+    #         {
+    #             'name': 'ExistingOccupations',
+    #             'description': 'A list of existing occupations to associate the user with',
+    #             'required': False,
+    #             'type': 'array',
+    #             'items': {
+    #                 'type': 'string'
+    #             }
+    #         }
+    #     ],
+    #     'responses': {
+    #         '200': {
+    #             'description': 'Successfully created user',
+    #             'schema': {
+    #                 'type': 'object',
+    #                 'properties': {
+    #                     'username': {
+    #                         'type': 'string'
+    #                     },
+    #                     'userUID': {
+    #                         'type': 'integer'
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #     }
+    # })
     def post(self):
         user_arg = reqparse.RequestParser()
         user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
@@ -626,6 +633,7 @@ class User(Resource):
                 "username": name,
                 "userUID": uid
         }
+    
 class Europass(Resource):
 
     def get(self):
