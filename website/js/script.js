@@ -1,6 +1,7 @@
 // JavaScript code
 
 var curr_occupation = ""
+var existing_occupations = []
 var saved_competencies = []
 var required_skills = []
 var userID = -1
@@ -77,8 +78,8 @@ function saveCompetenices() {
 	for (var i = 0; i < items.length; i++) {
 		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
 	}
-	console.log(selectedItems);
-	setSavedCompetencies(selectedItems)
+	saved_competencies = saved_competencies.concat(selectedItems)
+	console.log(saved_competencies);
 
 }
 
@@ -109,20 +110,21 @@ function postOccupation() {
 	xhr.setRequestHeader("Accept", "application/json");
 	xhr.setRequestHeader("Content-Type", "application/json");
 
-	xhr.onreadystatechange = function () {
-		if (this.readyState === 4 && this.status == 200) {
-			var data = JSON.parse(this.responseText);
-			userID = data['userUID']
-		}
-	};
 	console.log(JSON.stringify({
 		"OccupationUri": curr_occupation,
 		"Competencies": saved_competencies
 	}));
 	xhr.send(JSON.stringify({
 		"OccupationUri": curr_occupation,
-		"Competencies": saved_competencies
+		"Competencies": saved_competencies,
+		"ExistingOccupations": existing_occupations
 	}));
+	xhr.onreadystatechange = function () {
+		if (this.readyState === 4 && this.status == 200) {
+			console.log(JSON.parse(this.responseText));
+			
+		}
+	};
 }
 
 function updateExistingCompetencies() {
@@ -188,4 +190,36 @@ function recommendCourses() {
 	xhr.open("GET", "http://localhost:5001/essentials?occupationUri=" + encodeURIComponent(param) + "&personID=" + userID, true);
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send();
+}
+
+function storeEuropassSkills(){
+	const europass_url = document.getElementById('europassURL').value;
+	const out1 = document.getElementById('output1');
+	
+	let xhr = new XMLHttpRequest();
+	xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
+	xhr.setRequestHeader("Accept", "application/json");
+	xhr.send();
+
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+		  console.log(xhr.status);
+		  existing_occupations = existing_occupations.concat(JSON.parse(xhr.responseText)["occupations"]);
+		  saved_competencies = saved_competencies.concat(JSON.parse(xhr.responseText)["preferred_labels"]);
+		  checkCheckboxes();
+		}};
+	out1.innerHTML = "Europass imported";
+
+
+	}
+
+function checkCheckboxes(){
+	const checkboxes = document.getElementsByName("skill")
+	
+	for (const cb of checkboxes) {
+		if (saved_competencies.includes(cb.value)){
+			cb.checked = true;
+		}
+	}
+
 }
