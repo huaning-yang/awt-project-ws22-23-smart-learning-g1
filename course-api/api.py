@@ -24,37 +24,11 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
-json = FlaskJSON(app)
-# @json.encoder
-# def custom_encoder(o):
-#     try:
-#         if isinstance(o, datetime.date):
-#             return o.isoformat()
-#         iterable = iter(o)
-#     except TypeError:
-#         pass
-#     else:
-#         return list(iterable)
-#     return JSONEncoder.default(o)
+FlaskJSON(app)
 
-# class CustomJSONEncoder(JSONEncoder):
-#     def default(self, obj):
-#         try:
-#             if isinstance(obj, date):
-#                 return obj.isoformat()
-#             iterable = iter(obj)
-#         except TypeError:
-#             pass
-#         else:
-#             return list(iterable)
-#         return JSONEncoder.default(self, obj)
-
-# app.json = CustomJSONEncoder
-
-# @api.representation('application/json')
-# def output_json(data, code, headers=None):
-#     return jsonify(data, code, headers,)
-    # return json_response(data_=data, headers_=headers, status_=code)
+@api.representation('application/json')
+def output_json(data, code, headers=None):
+    return json_response(data_=data, headers_=headers, status_=code)
 
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
 driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
