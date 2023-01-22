@@ -163,6 +163,26 @@
 							?> -->
 						</select>
 					</div> -->
+
+					<div class="row" id="date">
+						<label for="date-select">Filter Date</label><br>
+						<input type="date" id="date-select" name="date">
+					</div>
+
+					<div class="row" id="location">
+						<label for="location-select">Location</label><br>
+						<select id="location-select">
+							<option value="none">none</option>
+							<?php
+							$json = file_get_contents('http://course-api-service/locations');
+							$obj = json_decode($json);
+							$locations = $obj;
+							foreach ($locations as $location) {
+								echo "<option value='$location->LocationUri'>$location->preferred_label</option>";
+							}
+							?>
+						</select>
+					</div>
 					
 					<div class="row" id="filter">
 						<button type="button" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
