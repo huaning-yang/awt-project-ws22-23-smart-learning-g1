@@ -99,7 +99,7 @@ class CourseList(Resource):
         def get_courses(tx):
             return list(tx.run(
                 '''
-                MATCH (course:Course) RETURN course
+                MATCH (course:Course) RETURN course LIMIT 30
                 '''
             ))
         db = get_db()
@@ -542,27 +542,92 @@ class ApiDocs(Resource):
             path = 'index.html'
         return send_from_directory('swaggerui', path)
     
-
 class User(Resource):
+    @swagger.doc({
+        'tags': ['users'],
+        'description': 'Retrieve the uid of the last user in the database',
+        'responses': {
+            '200': {
+                'description': 'Successful retrieval of user uid',
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'integer'
+                    }
+                }
+            }
+        }
+    })
 
     def get(self):
         def get_users(tx):
             return set(tx.run(
                 '''
-                MATCH (u:User) RETURN u.uid
+                MATCH (n:User) RETURN n.uid ORDER BY n.uid desc LIMIT 1
                 '''
             ))
         db = get_db()
         result = flatten(db.execute_read(get_users))
         return result
-
+    
+    @swagger.doc({
+        'responses': {
+            '200': {
+                'description': 'Success',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'username': {'type': 'string'},
+                        'userUID': {'type': 'string'}
+                    }
+                }
+            },
+            '400': {
+                'description': 'Bad Request',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string'}
+                    }
+                }
+            }
+        },
+        'parameters': [
+            {
+                'name': 'OccupationUri',
+                'in': 'formData',
+                'required': True,
+                'description': 'This is a node name',
+                'type': 'string'
+            },
+            {
+                'name': 'Competencies',
+                'in': 'formData',
+                'required': True,
+                'description': 'This is a list of Competencies',
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
+            {
+                'name': 'ExistingOccupations',
+                'in': 'formData',
+                'description': 'This is a list of existing occupations',
+                'type': 'array',
+                'items': {'type': 'string'}
+            }
+        ],
+        'tags': ['users']
+    })
     def post(self):
         user_arg = reqparse.RequestParser()
         user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
         user_arg.add_argument("Competencies", action = "append", help="This is a list", required=True)
+        user_arg.add_argument("ExistingOccupations", action = "append", help="This is a list")
 
         competencies = user_arg.parse_args()["Competencies"]
         uri = user_arg.parse_args()["OccupationUri"]
+        existing_occupations = user_arg.parse_args()["ExistingOccupations"]
+
         user_uids = User.get(self)
         uid =  0 if not user_uids else max(user_uids) + 1
         name = f"User {uid}"
@@ -571,7 +636,7 @@ class User(Resource):
             result = tx.run(
                 ''' MATCH (o:Occupation) 
                     WHERE o.OccupationUri = $uri 
-                    MERGE (u:User {uid:$uid, name:$name}) -[:planned_occupation]-> (o) 
+                    MERGE (u:User {uid:$uid, name:$name}) -[:plannedOccupation]-> (o) 
                     RETURN *
                 ''', 
                 uri=uri, uid=uid, name=name)
@@ -590,46 +655,97 @@ class User(Resource):
                 skill_name=skill_name, uid=uid)
             records = list(result)
             return records
+        def write_user_occupations(tx, occupation_uri, uid):
+            result = tx.run(
+                ''' MATCH (u:User) 
+                    WHERE u.uid = $uid
+                    MATCH (o:Occupation)     
+                    WHERE o.OccupationUri = $occupation_uri
+                    CREATE (u) -[:hasOccupation]-> (o) 
+                    RETURN *
+                ''', 
+                occupation_uri=occupation_uri, uid=uid)
+            records = list(result)
+            return records
         db = get_db()
         db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
         [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
+        if existing_occupations:
+            [db.execute_write(write_user_occupations, occupation_uri=occupation_uri, uid=uid) for occupation_uri in existing_occupations]
         return {
                 "username": name,
                 "userUID": uid
         }
+
+
 class Europass(Resource):
-    def post(self):
-        user_arg = reqparse.RequestParser()
-        user_arg.add_argument("EuropassUri", type=str, help="This is a europass cv link", required=True)
+    @swagger.doc({
+        'tags': ['europass'],
+        'description': 'Convert Europass-URL to JSON returning occupations and skills',
+        'parameters': [
+            {
+                'name': 'europassURL',
+                'in': 'query',
+                'required': True,
+                'description': 'The URL of the Europass e-portfolio to be converted to JSON',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'Success',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'occupations': {'type': 'array'},
+                        'preferred_labels': {'type': 'array'}
+                    }
+                }
+            },
+            '400': {
+                'description': 'Bad Request',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string'}
+                    }
+                }
+            }
+        }      
+        
+    })
+    def get(self):
+        europass_url = request.args.getlist('europassURL')[0]
+        print(europass_url)
+    
 
-        link_europass_cv = user_arg.parse_args()["EuropassUri"]
-        # link_europass_cv = "https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/4d1ede99-9838-4bcc-bfdc-3bacd8d5fe99?view=html"
-
-        if link_europass_cv.endswith("html"):
+        if europass_url.endswith("html"):
             print("Converting to JSON...")
-            link_europass_cv = link_europass_cv.replace("view=html", "view=json")
+            europass_url = europass_url.replace("view=html", "view=json")
 
-        if not link_europass_cv.startswith("https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/"):
+        if not europass_url.startswith("https://europa.eu/europass/eportfolio/api/eprofile/shared-profile/"):
             print(
                 "Incorrect link. the only format supported is the europass one. Please go to https://ecas.ec.europa.eu/cas/. Create an account, then create your cv. Finally create an export link to share your cv.")
         else:
-            f = urlopen(link_europass_cv)
+            f = urlopen(europass_url)
             myfile = f.read()
 
             cvJson = json.loads(myfile)
-            firstName = cvJson["profile"]["personalInformation"]["firstName"]
-            lastName = cvJson["profile"]["personalInformation"]["lastName"]
-            u_name = firstName+"-"+lastName
+
+            # collect occupations
+            occs = []
 
             workExperiences = cvJson["profile"]["workExperiences"]
             for experience in workExperiences:
+
                 if "uri" in experience["occupation"]:
                     occupation = experience["occupation"]["uri"]
                     occupation_uri = str(occupation)
                     occupation_uri_lst = [str(occupation)]
-                    print(occupation_uri)
+                
+                occs.append(occupation_uri) if not occupation_uri == "None" else None
 
-                    def get_essential_skills(tx):
+                def get_essential_skills(tx):
                             return list(tx.run(
                             '''
                             MATCH (o:Occupation)-[r:requires]->(s:Skill)
@@ -638,64 +754,22 @@ class Europass(Resource):
                             '''
                         ))
 
-                    db = get_db()
-                    essentials = db.execute_read(get_essential_skills)
-                    print("ess", essentials)
-                    competencies = []
-                    for essential in essentials:
-                        for sk in essential:
-                            competencies.append(serialize_skill(sk))
+                db = get_db()
+                essentials = db.execute_read(get_essential_skills)
 
-                    def get_users(tx):
-                        return set(tx.run(
-                            '''
-                            MATCH (u:User) RETURN u.uid
-                            '''
-                        ))
+                competencies = []
+                for essential in essentials:
+                    for sk in essential:
+                        competencies.append(serialize_skill(sk))
 
-                    db = get_db()
-                    user_uids = flatten(db.execute_read(get_users))
-                    uid = 0 if not user_uids else max(user_uids) + 1
-                    name = f"User-{uid} {u_name}"
-                    # print(user_uids, uid, name)
-                    def write_occupation(tx, uri, uid, name):
-                        result = tx.run(
-                            ''' MATCH (o:Occupation) 
-                                WHERE o.OccupationUri = $uri 
-                                MERGE (u:User {uid:$uid, name:$name}) -[:planned_occupation]-> (o) 
-                                RETURN *
-                            ''',
-                            uri=uri, uid=uid, name=name)
-                        records = list(result)
-                        return records
+                preferred_labels = []
+                for c in competencies:
+                    preferred_labels.append(c["preferred_label"])
 
-                    def write_competencies(tx, skill_name, uid):
-                        result = tx.run(
-                            ''' MATCH (u:User) 
-                                WHERE u.uid = $uid
-                                MATCH (s:Skill)     
-                                WHERE s.preferred_label = $skill_name
-                                CREATE (u) -[:hasSkill]-> (s) 
-                                RETURN *
-                            ''',
-                            skill_name=skill_name, uid=uid)
-                        records = list(result)
-                        return records
-
-                    db = get_db()
-                    db.execute_write(write_occupation, uri=occupation_uri, uid=uid, name=name)
-                    #print("Competencies:",  competencies)
-                    preferred_labels = []
-                    for c in competencies:
-                        preferred_labels.append(c["preferred_label"])
-                    [db.execute_write(write_competencies, skill_name=skill_name, uid=uid) for skill_name in
-                     preferred_labels]
-                break
         return {
-            "username": name,
-            "userUID": uid
-        }
-        # return preferred_labels
+                "occupations": occs,
+                "preferred_labels": preferred_labels
+                }
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
