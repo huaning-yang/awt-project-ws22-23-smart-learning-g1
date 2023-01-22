@@ -1,12 +1,16 @@
 # CourseOverview Service
 
 # Import framework
+from time import strftime
 from flask_restful import Resource, reqparse
 from flask import Flask, request, jsonify, g, send_from_directory #added to top of file
+from flask.json import JSONEncoder
 from flask_cors import CORS #added to top of file
 from flask_restful_swagger_2 import Api, swagger, Schema
 from flask_json import FlaskJSON, json_response
 import sqlite3
+import datetime
+import json
 
 from urllib.request import urlopen
 import json
@@ -20,11 +24,37 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
-FlaskJSON(app)
+json = FlaskJSON(app)
+# @json.encoder
+# def custom_encoder(o):
+#     try:
+#         if isinstance(o, datetime.date):
+#             return o.isoformat()
+#         iterable = iter(o)
+#     except TypeError:
+#         pass
+#     else:
+#         return list(iterable)
+#     return JSONEncoder.default(o)
 
-@api.representation('application/json')
-def output_json(data, code, headers=None):
-    return json_response(data_=data, headers_=headers, status_=code)
+# class CustomJSONEncoder(JSONEncoder):
+#     def default(self, obj):
+#         try:
+#             if isinstance(obj, date):
+#                 return obj.isoformat()
+#             iterable = iter(obj)
+#         except TypeError:
+#             pass
+#         else:
+#             return list(iterable)
+#         return JSONEncoder.default(self, obj)
+
+# app.json = CustomJSONEncoder
+
+# @api.representation('application/json')
+# def output_json(data, code, headers=None):
+#     return jsonify(data, code, headers,)
+    # return json_response(data_=data, headers_=headers, status_=code)
 
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
 driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
@@ -58,6 +88,12 @@ class CourseModel(Schema):
         },
         'course_name': {
             'type': 'string',
+        },
+        'course_location': {
+            'type': 'string',
+        },
+        'course_datetime': {
+            'type': 'string',
         }
     }
 
@@ -65,7 +101,9 @@ def serialize_course(course):
     return {
         'course_description': course['course_description'],
         'course_id': course['course_id'],
-        'course_name': course['course_name']
+        'course_name': course['course_name'],
+        'course_location': course['course_location'],
+        'course_datetime': course['course_datetime'].strftime('%d.%m.%Y') if course['course_datetime'] != datetime.datetime.min else "No dates available"
     }
 
 class CourseList(Resource):
@@ -92,7 +130,7 @@ class CourseList(Resource):
             ))
         db = get_db()
         result = db.execute_read(get_courses)
-        return [serialize_course(record['course']) for record in result]
+        return [serialize_course(record['course']) for record in result[:100]]
 
 
 
@@ -141,6 +179,35 @@ class Courses(Resource):
         db = get_db()
         result = db.execute_read(get_filtered_courses)
         return [serialize_course(record['course']) for record in result]
+
+class LocationList(Resource):
+    @swagger.doc({
+        'tags': ['location'],
+        'summary': 'Find all locations',
+        'description': 'Returns a list of locations',
+        'responses': {
+            '200': {
+                'description': 'A list of locations',
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
+                    }
+                }
+            }
+        }
+    })
+    def get(self):
+        def get_locations(tx):
+            return list(tx.run(
+                '''
+                MATCH (n:Course) WITH DISTINCT n.course_location AS location
+                RETURN location
+                '''
+            ))
+        db = get_db()
+        result = db.execute_read(get_locations)
+        return [record['location'] for record in result]
         
 class SkillModel(Schema):
     type = 'object'
@@ -672,6 +739,7 @@ api.add_resource(OccupationOptional, '/occupationoptional')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 api.add_resource(User, '/users')
 api.add_resource(Europass, '/europass')
+api.add_resource(LocationList, '/locations')
 
 # Run the application
 if __name__ == '__main__':
