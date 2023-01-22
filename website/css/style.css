@@ -24,9 +24,10 @@ input[type=text]:focus {
 	margin-left: 90px;
 }
 
-.course{
-display: list-item;	
-}
+.courseList{
+	margin-top: 100px;
+	}
+
 .scrollable { 
 	border:2px solid #ccc; 
 	width:300px; 
