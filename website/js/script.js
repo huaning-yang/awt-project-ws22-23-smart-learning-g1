@@ -37,7 +37,7 @@ function filterCourses() {
 	xhttp.onreadystatechange = function () {
 		if (this.readyState == 4 && this.status == 200) {
 			data = this.responseText;
-			console.log(data);
+			// console.log(data);
 			var coursesResponse = JSON.parse(data);
 			let x = document.getElementsByClassName('course');
 			for (i = 0; i < x.length; i++) {
@@ -47,7 +47,7 @@ function filterCourses() {
 				var course = coursesResponse[j];
 				// console.log(course.course_name);
 				for (i = 0; i < x.length; i++) {
-					if (x[i].dataset['uuid'].includes(course.course_id)){
+					if (x[i].dataset['uuid'].includes(course.course_id)) {
 						x[i].style.display = "list-item";
 					}
 				}
@@ -122,7 +122,7 @@ function postOccupation() {
 	xhr.onreadystatechange = function () {
 		if (this.readyState === 4 && this.status == 200) {
 			console.log(JSON.parse(this.responseText));
-			
+
 		}
 	};
 }
@@ -164,6 +164,30 @@ function updateExistingCompetencies() {
 	xhr.send();
 }
 
+function getRelatedSkills() {
+	const selectedOccupation = document.getElementById("occupation-select").value;
+	const recommenderBox = document.getElementById("recommendation-items")
+	var param = selectedOccupation;
+	var xhr = new XMLHttpRequest();
+	var data;
+	xhr.onreadystatechange = function () {
+		if (this.readyState == 4 && this.status == 200) {
+			data = this.responseText;
+			var response = JSON.parse(data);
+			var i, L = recommenderBox.options.length - 1;
+			for (i = L; i >= 0; i--) {
+				recommenderBox.remove(i)
+			}
+			for (var sk of response) {
+				recommenderBox.options[recommenderBox.options.length] = new Option(sk)
+			}
+		}
+	}
+	xhr.open("GET", "http://localhost:5001/occupationrelated?occupationUri=" + encodeURIComponent(param), true);
+	xhr.setRequestHeader("Content-type", "application/json");
+	xhr.send();
+}
+
 function recommendCourses() {
 	const selectedOccupation = document.getElementById("occupation-select").value;
 	const recommenderBox = document.getElementById("recommendation-items")
@@ -175,7 +199,6 @@ function recommendCourses() {
 	xhr.onreadystatechange = function () {
 		if (this.readyState == 4 && this.status == 200) {
 			data = this.responseText;
-			console.log(data);
 			var recommenderResponse = JSON.parse(data);
 			var i, L = recommenderBox.options.length - 1;
 			for (i = L; i >= 0; i--) {
@@ -192,10 +215,10 @@ function recommendCourses() {
 	xhr.send();
 }
 
-function storeEuropassSkills(){
+function storeEuropassSkills() {
 	const europass_url = document.getElementById('europassURL').value;
 	const out1 = document.getElementById('output1');
-	
+
 	let xhr = new XMLHttpRequest();
 	xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
 	xhr.setRequestHeader("Accept", "application/json");
@@ -203,21 +226,22 @@ function storeEuropassSkills(){
 
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState === XMLHttpRequest.DONE) {
-		  console.log(xhr.status);
-		  existing_occupations = existing_occupations.concat(JSON.parse(xhr.responseText)["occupations"]);
-		  saved_competencies = saved_competencies.concat(JSON.parse(xhr.responseText)["preferred_labels"]);
-		  checkCheckboxes();
-		}};
+			console.log(xhr.status);
+			existing_occupations = existing_occupations.concat(JSON.parse(xhr.responseText)["occupations"]);
+			saved_competencies = saved_competencies.concat(JSON.parse(xhr.responseText)["preferred_labels"]);
+			checkCheckboxes();
+		}
+	};
 	out1.innerHTML = "Europass imported";
 
 
-	}
+}
 
-function checkCheckboxes(){
+function checkCheckboxes() {
 	const checkboxes = document.getElementsByName("skill")
-	
+
 	for (const cb of checkboxes) {
-		if (saved_competencies.includes(cb.value)){
+		if (saved_competencies.includes(cb.value)) {
 			cb.checked = true;
 		}
 	}

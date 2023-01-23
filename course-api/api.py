@@ -464,6 +464,48 @@ class OccupationList(Resource):
         result = db.execute_read(get_occupations)
         return [serialize_occupation(record['occupation']) for record in result]
 
+class OccupationRelatedSkills(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'description': 'Returns a list of skills that are related to the occupation, but not required',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'One occupation uri',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of essential skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        def get_relatedSkills(tx):
+            return list(tx.run(
+                '''
+                MATCH (o1:Occupation)-[r1:requires {type: 'essential'}]->(s1:Skill)<-[r2:requires {type: 'essential'}]-(o2:Occupation)-[r3:requires]->(s2:Skill)
+                WHERE o1 <> o2 and s1<>s2 AND o1.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                AND NOT (o1)-[:requires]->(s2)
+                RETURN s2.preferred_label, count(s2) as s2frequency
+                ORDER BY s2frequency DESC
+                LIMIT 15
+                '''
+            ))
+        db = get_db()
+        relatedSkills = db.execute_read(get_relatedSkills)
+        labels = []
+        for sk in relatedSkills:
+            labels.append(sk[0])
+        return labels
+
+
 class MissingEssential(Resource):
     @swagger.doc({
         'tags': ['recommender'],
@@ -784,6 +826,7 @@ api.add_resource(OccupationList, '/occupations')
 api.add_resource(OccupationURI, '/occupationsuri')
 api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
+api.add_resource(OccupationRelatedSkills, '/occupationrelated')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 api.add_resource(User, '/users')
 api.add_resource(Europass, '/europass')

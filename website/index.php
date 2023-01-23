@@ -162,7 +162,9 @@
 				<div class="row" id="filter">
 					<button type="button" class="btn btn-block btn-primary" onclick="filterCourses();">Filter</button>
 					<button type="button" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
+					<button type="button" class="btn btn-block btn-info" onclick="getRelatedSkills();">Related Skills</button>
 					<button type="button" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
+
 				</div>
 		</div>
 
