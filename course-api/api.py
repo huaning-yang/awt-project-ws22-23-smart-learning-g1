@@ -137,7 +137,7 @@ class Courses(Resource):
         }
     })
     def get(self):
-        skills = request.args.get('skill')
+        skills = request.args.getlist('skill_uid')
         def get_filtered_courses(tx):
             return list(tx.run(
                 '''
@@ -146,10 +146,6 @@ class Courses(Resource):
                 RETURN course
                 '''
             ))
-
-        skills = request.args.getlist('skill')
-        print(skills)
-        # return(skills)
         db = get_db()
         result = db.execute_read(get_filtered_courses)
         return [serialize_course(record['course']) for record in result]
@@ -223,6 +219,46 @@ class SkillList(Resource):
         db = get_db()
         result = db.execute_read(get_skills)
         return [serialize_skill(record['skill_name']) for record in result]
+
+class OccupationUnobtainableSkills(Resource):
+    @swagger.doc({
+        'tags': ['occupation'],
+        'description': 'Returns list of skills not covered by any courses',
+        'parameters': [
+            {
+            'name': 'occupationUri',
+            'description': 'The concept uri of an occupation',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'list of unobtainable skills',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        occupation = request.args.getlist('occupationUri')
+        def get_unobtainable(tx):
+            return list(tx.run(
+                '''
+                MATCH (o1:Occupation)-[r1:requires {type: 'essential'}]->(s1:Skill) 
+                WHERE o1.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                AND NOT ()-[:PROVIDE_SKILL]->(s1) 
+                RETURN s1
+                '''
+            ))
+        db = get_db()
+        query = db.execute_read(get_unobtainable)
+        unobtainable = []
+        for sk in query:
+            for s in sk:
+                unobtainable.append(serialize_skill(s))
+        return unobtainable
 
 class SkillLabel(Resource):
     @swagger.doc({
@@ -824,6 +860,7 @@ api.add_resource(SkillLabel, '/label')
 api.add_resource(MissingEssential, '/essentials')
 api.add_resource(OccupationList, '/occupations')
 api.add_resource(OccupationURI, '/occupationsuri')
+api.add_resource(OccupationUnobtainableSkills, '/occupationunobtainable')
 api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
 api.add_resource(OccupationRelatedSkills, '/occupationrelated')

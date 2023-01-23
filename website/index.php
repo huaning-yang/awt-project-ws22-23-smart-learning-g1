@@ -57,7 +57,7 @@
 	<div class="container">
 		<div class="row" id="user">
 			<label for="occupation-select">Planned Occupation</label><br>
-			<select id="occupation-select" onchange="getOccupation(); updateExistingCompetencies();">
+			<select id="occupation-select" onchange="getOccupation(); updateExistingCompetencies(); getUnobtainableSkills();">
 				<option class='occupation' value="none">none</option>
 				<?php
 				$json = file_get_contents('http://course-api-service/occupations');
@@ -123,6 +123,13 @@
 				<div class="row" id="recommendations">
 					<label for="recommendation-items">Recommendations</label><br>
 					<select multiple id="recommendation-items">
+
+					</select>
+				</div>
+
+				<div class="row" id="unobtainable">
+					<label for="unobtainable-skills">Skills not covered by any courses</label><br>
+					<select multiple id="unobtainable-items">
 
 					</select>
 				</div>

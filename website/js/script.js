@@ -188,6 +188,32 @@ function getRelatedSkills() {
 	xhr.send();
 }
 
+function getUnobtainableSkills() {
+	const selectedOccupation = document.getElementById("occupation-select").value;
+	const unobtainableSkills = document.getElementById("unobtainable-items");
+	var param = selectedOccupation;
+	var xhr = new XMLHttpRequest();
+	var data;
+
+	xhr.onreadystatechange = function () {
+		if (this.readyState == 4 && this.status == 200) {
+			data = this.responseText;
+			console.log(data)
+			var response = JSON.parse(data);
+			var i, L = unobtainableSkills.options.length - 1;
+			for (i = L; i >= 0; i--) {
+				unobtainableSkills.remove(i)
+			}
+			for (var sk of response) {
+				unobtainableSkills.options[unobtainableSkills.options.length] = new Option(sk['preferred_label'], sk['concept_uri'])
+			}
+		}
+	}
+	xhr.open("GET", "http://localhost:5001/occupationunobtainable?occupationUri=" + encodeURIComponent(param), true);
+	xhr.setRequestHeader("Content-type", "application/json");
+	xhr.send();
+}
+
 function recommendCourses() {
 	const selectedOccupation = document.getElementById("occupation-select").value;
 	const recommenderBox = document.getElementById("recommendation-items")
