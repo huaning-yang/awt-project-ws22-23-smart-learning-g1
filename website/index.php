@@ -154,7 +154,7 @@
 				<div class="row" id="location">
 					<label for="location-select">Location</label><br>
 					<select id="location-select">
-						<!-- <option value="none">none</option> -->
+						<option value="none">No Preference</option>
 						<?php
 						$json = file_get_contents('http://course-api-service/locations');
 						$obj = json_decode($json);

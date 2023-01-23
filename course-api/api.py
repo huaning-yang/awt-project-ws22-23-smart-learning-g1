@@ -104,7 +104,7 @@ class CourseList(Resource):
             ))
         db = get_db()
         result = db.execute_read(get_courses)
-        return [serialize_course(record['course']) for record in result[:100]]
+        return [serialize_course(record['course']) for record in result]
 
 
 
