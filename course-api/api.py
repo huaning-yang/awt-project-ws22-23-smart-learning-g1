@@ -11,6 +11,7 @@ from flask_json import FlaskJSON, json_response
 import sqlite3
 import datetime
 import json
+from uuid import uuid4
 
 from urllib.request import urlopen
 import json
@@ -18,6 +19,8 @@ import json
 from neo4j import GraphDatabase, basic_auth
 from neo4j.exceptions import Neo4jError
 import neo4j.time
+
+user_id = -1
 
 app = Flask(__name__)
 # Instantiate the app
@@ -706,9 +709,19 @@ class User(Resource):
         uri = user_arg.parse_args()["OccupationUri"]
         existing_occupations = user_arg.parse_args()["ExistingOccupations"]
 
-        user_uids = User.get(self)
-        uid =  0 if not user_uids else max(user_uids) + 1
+        # user_uids = User.get(self)
+        # uid =  0 if not user_uids else max(user_uids) + 1
+        assert user_id != -1
+        uid = user_id
         name = f"User {uid}"
+
+        def delete_old_user(tx, uid):
+            user = tx.run(
+                '''MATCH (n:User {uid:$uid}) DETACH DELETE n''', 
+                uid=uid)
+            user = list(user)
+            return user
+            
 
         def write_user_occupation(tx, uri, uid, name):
             result = tx.run(
@@ -746,6 +759,7 @@ class User(Resource):
             records = list(result)
             return records
         db = get_db()
+        db.execute_write(delete_old_user, uid=uid)
         db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
         [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
         if existing_occupations:
@@ -848,6 +862,15 @@ class Europass(Resource):
                 "occupations": occs,
                 "preferred_labels": preferred_labels
                 }
+    
+class UserID(Resource):
+
+    def get(self):
+        global user_id
+        user_id = str(uuid4())
+        return {
+            "userID": user_id
+        }
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
@@ -868,6 +891,7 @@ api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 api.add_resource(User, '/users')
 api.add_resource(Europass, '/europass')
 api.add_resource(LocationList, '/locations')
+api.add_resource(UserID, '/userid')
 
 # Run the application
 if __name__ == '__main__':

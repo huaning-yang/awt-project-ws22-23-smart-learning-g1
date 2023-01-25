@@ -53,8 +53,14 @@
 	<div class="container">
 		<img src="../resources/header.png" alt="HeaderImage" class="center" style="width:100%;">
 	</div>
+	<div class="user"> 
+		<div> 
+			<h5 id="userText"> Welcome </h5> 
+		</div>
+	</div>
 	<hr>
 	<div class="container">
+		
 		<div class="row" id="user">
 			<label for="occupation-select">Planned Occupation</label><br>
 			<select id="occupation-select" onchange="getOccupation(); updateExistingCompetencies(); getUnobtainableSkills();">
@@ -107,7 +113,7 @@
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
                     <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>
                 </div>
-                <p class="output" id="output1"></p>
+                <p id="europass"></p>
 				<div class="container">
 					<input type="button" value="Commit" onclick=postOccupation();> 
 				</div>

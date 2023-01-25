@@ -4,7 +4,24 @@ var curr_occupation = ""
 var existing_occupations = []
 var saved_competencies = []
 var required_skills = []
-var userID = -1
+var userID = ""
+
+window.onload = function () {
+	let xhr = new XMLHttpRequest();
+	xhr.open("GET", "http://localhost:5001/userid", true);
+	xhr.setRequestHeader("Accept", "application/json");
+	xhr.send();
+
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+			console.log(xhr.status);
+			userID = JSON.parse(xhr.response)["userID"]
+		}
+		var userText = document.getElementById("userText");
+			userText.innerHTML = "Welcome, your UserID is: " + userID;
+	};
+
+}
 
 
 function search_course() {
@@ -243,13 +260,13 @@ function recommendCourses() {
 
 function storeEuropassSkills() {
 	const europass_url = document.getElementById('europassURL').value;
-	const out1 = document.getElementById('output1');
+	const confirmation = document.getElementById('europass');
 
 	let xhr = new XMLHttpRequest();
 	xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
 	xhr.setRequestHeader("Accept", "application/json");
 	xhr.send();
-
+	
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState === XMLHttpRequest.DONE) {
 			console.log(xhr.status);
@@ -258,7 +275,8 @@ function storeEuropassSkills() {
 			checkCheckboxes();
 		}
 	};
-	out1.innerHTML = "Europass imported";
+	confirmation.innerHTML = "Europass imported";
+
 
 
 }
