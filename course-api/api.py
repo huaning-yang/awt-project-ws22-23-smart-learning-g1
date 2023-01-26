@@ -721,16 +721,24 @@ class User(Resource):
                 uid=uid)
             user = list(user)
             return user
+        
+        def create_user(tx, uid, name):
+            user = tx.run(
+                '''CREATE (u:User {uid:$uid, name:$name}) RETURN *''', 
+                uid=uid, name=name)
+            user = list(user)
+            return user
             
-
-        def write_user_occupation(tx, uri, uid, name):
+        def write_user_occupation(tx, uri, uid):
             result = tx.run(
                 ''' MATCH (o:Occupation) 
                     WHERE o.OccupationUri = $uri 
-                    MERGE (u:User {uid:$uid, name:$name}) -[:plannedOccupation]-> (o) 
+                    MATCH (u:User)
+                    WHERE u.uid = $uid
+                    MERGE (u) -[:plannedOccupation]-> (o) 
                     RETURN *
                 ''', 
-                uri=uri, uid=uid, name=name)
+                uri=uri, uid=uid)
             records = list(result)
             return records
         
@@ -760,7 +768,8 @@ class User(Resource):
             return records
         db = get_db()
         db.execute_write(delete_old_user, uid=uid)
-        db.execute_write(write_user_occupation, uri=uri, uid=uid, name=name)
+        db.execute_write(create_user, uid=uid, name=name)
+        db.execute_write(write_user_occupation, uri=uri, uid=uid)
         [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
         if existing_occupations:
             [db.execute_write(write_user_occupations, occupation_uri=occupation_uri, uid=uid) for occupation_uri in existing_occupations]

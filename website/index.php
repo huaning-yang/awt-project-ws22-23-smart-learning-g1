@@ -53,6 +53,7 @@
 	<div class="container">
 		<img src="../resources/header.png" alt="HeaderImage" class="center" style="width:100%;">
 	</div>
+	<hr>
 	<div class="user"> 
 		<div align-> 
 			<h5 id="userText"> Welcome </h5> 
@@ -61,7 +62,6 @@
 			<input type="button" value="Copy" onclick=copyUserID();>
 		</div>
 	</div>
-	<hr>
 	<div class="container">
 		
 		<div class="row" id="user">
@@ -101,11 +101,16 @@
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
                     <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>
                 </div>
-                <p id="europass"></p>
+                <div>
+					<p id="europass"></p>
+				</div>
+				<div id="europassContainer" class="europass"> 
+					<ul id="europassList"> </ul> 
+				</div>
 				<div class="container">
 					<input type="button" value="Commit" onclick=commitUserToDatabase();> 
 				</div>
-				<div id="europassList"> </div>
+				
 			</div>
 		</div>
 

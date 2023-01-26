@@ -36,9 +36,6 @@ function union(setA, setB) {
 	};
   
   }
-
-
-
 const copyUserID = async () => {
 	try {
 	  await navigator.clipboard.writeText(userID);
@@ -295,27 +292,38 @@ function storeEuropassSkills() {
 		// strValue was non-empty string, true, 42, Infinity, [], ...
 	
 
-	let xhr = new XMLHttpRequest();
-	xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
-	xhr.setRequestHeader("Accept", "application/json");
-	xhr.send();
+		let xhr = new XMLHttpRequest();
+		xhr.open("GET", "http://localhost:5001/europass?europassURL=" + europass_url, true);
+		xhr.setRequestHeader("Accept", "application/json");
+		xhr.send();
 	
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === XMLHttpRequest.DONE) {
-			console.log(xhr.status);
-			existing_occupations = union(existing_occupations, JSON.parse(xhr.responseText)["occupations"]);
-			europass_set = union(europass_set, JSON.parse(xhr.responseText)["preferred_labels"]);
-			checkCheckboxes();
-		}
-	};
-	confirmation.innerHTML = "Europass imported";
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				console.log(xhr.status);
+				existing_occupations = union(existing_occupations, JSON.parse(xhr.responseText)["occupations"]);
+				europass_set = union(europass_set, JSON.parse(xhr.responseText)["preferred_labels"]);
+				checkCheckboxes();
+				showEuropassImports();
+			}
+		};
+		confirmation.innerHTML = "Europass-Skills";
 
-
-	// const europassList = document.getElementById("europassList");
-
-	// europassList.innerHTML = JSON.parse(xhr.responseText)["preferred_labels"]
+	
 	} else {
 		alert("Europass-URL is empty!");
+	}
+}
+
+function showEuropassImports(){
+	var div = document.getElementById("europassContainer");
+	div.style.display = "flex"
+
+	let list = document.getElementById("europassList");
+
+	for (i = 0; i < [...europass_set].length; ++i) {
+	  var li = document.createElement('li');
+	  li.innerText = [...europass_set][i];
+	  list.appendChild(li);
 	}
 }
 

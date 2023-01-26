@@ -37,6 +37,17 @@ input[type=text]:focus {
 	min-width: 300px;
 	resize: vertical;}
 
+.europass { 
+	display: none;
+	border:2px solid #ccc; 
+	width:300px; 
+	height:150px; 
+	overflow-y: scroll; 
+	min-height: 100px;
+	min-width: 300px;
+	resize: vertical;}
+	
+
 
 .user {
 	margin-top: 1.5em;
@@ -46,6 +57,7 @@ input[type=text]:focus {
 	gap: 1em;
 	align-items: center	
 }
+
 
 
 hr {
