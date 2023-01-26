@@ -54,7 +54,7 @@
 		<img src="../resources/header.png" alt="HeaderImage" class="center" style="width:100%;">
 	</div>
 	<div class="user"> 
-		<div> 
+		<div align-> 
 			<h5 id="userText"> Welcome </h5> 
 		</div>
 		<div>
@@ -92,7 +92,8 @@
 					?> 
 				-->
 				<div id="exist" class="scrollable">
-					<form id="existing-comp"><form>
+					<form id="existing-comp"> </form>
+
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
 				<br>
