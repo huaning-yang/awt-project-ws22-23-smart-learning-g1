@@ -6,6 +6,15 @@ var saved_competencies = []
 var required_skills = []
 var userID = ""
 
+const copyUserID = async () => {
+	try {
+	  await navigator.clipboard.writeText(userID);
+	  alert("User ID copied: " + userID);
+	} catch (err) {
+	  console.error('Failed to copy: ', err);
+	}
+  }
+
 window.onload = function () {
 	let xhr = new XMLHttpRequest();
 	xhr.open("GET", "http://localhost:5001/userid", true);
@@ -18,10 +27,11 @@ window.onload = function () {
 			userID = JSON.parse(xhr.response)["userID"]
 		}
 		var userText = document.getElementById("userText");
-			userText.innerHTML = "Welcome, your UserID is: " + userID;
+			userText.innerHTML = "Your UserID is: " + userID;
 	};
 
 }
+
 
 
 function search_course() {
@@ -278,7 +288,9 @@ function storeEuropassSkills() {
 	confirmation.innerHTML = "Europass imported";
 
 
+	const europassList = document.getElementById("europassList");
 
+	europassList.innerHTML = JSON.parse(xhr.responseText)["preferred_labels"]
 }
 
 function checkCheckboxes() {

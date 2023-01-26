@@ -57,6 +57,9 @@
 		<div> 
 			<h5 id="userText"> Welcome </h5> 
 		</div>
+		<div>
+			<input type="button" value="Copy" onclick=copyUserID();>
+		</div>
 	</div>
 	<hr>
 	<div class="container">
@@ -107,7 +110,6 @@
 
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
-				
 				<br>
                 <div class="container">
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
@@ -117,6 +119,7 @@
 				<div class="container">
 					<input type="button" value="Commit" onclick=postOccupation();> 
 				</div>
+				<div id="europassList"> </div>
 			</div>
 		</div>
 
