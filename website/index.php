@@ -92,22 +92,7 @@
 					?> 
 				-->
 				<div id="exist" class="scrollable">
-					<form id="existing-comp">
-
-
-						<?php
-						$json = file_get_contents('http://course-api-service/skills');
-						$obj = json_decode($json);
-						$skills = $obj;
-
-						foreach ($skills as $skill) {
-
-							echo  "<input type='checkbox' id='$skill->preferred_label' class='existing-skill' name='skill' value='$skill->preferred_label'> $skill->preferred_label <br>";
-						}
-
-						?>
-					</form>
-
+					<form id="existing-comp"><form>
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
 				<br>
@@ -117,7 +102,7 @@
                 </div>
                 <p id="europass"></p>
 				<div class="container">
-					<input type="button" value="Commit" onclick=postOccupation();> 
+					<input type="button" value="Commit" onclick=commitUserToDatabase();> 
 				</div>
 				<div id="europassList"> </div>
 			</div>
