@@ -20,11 +20,12 @@ from neo4j import GraphDatabase, basic_auth
 from neo4j.exceptions import Neo4jError
 import neo4j.time
 
+global user_id
 user_id = -1
 
 app = Flask(__name__)
 # Instantiate the app
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5002", "headers": "Content-Type, Authorization"}})
 api = Api(app)
 
 FlaskJSON(app)
@@ -639,17 +640,40 @@ class User(Resource):
             }
         }
     })
-
     def get(self):
-        def get_users(tx):
-            return set(tx.run(
-                '''
-                MATCH (n:User) RETURN n.uid ORDER BY n.uid desc LIMIT 1
-                '''
+        user_id_get = request.args.getlist('userID')[0]
+        def get_skills(tx, user_id_get):
+            result = list(tx.run(
+
+                '''MATCH (u:User)-[r:hasSkill]->(s:Skill) where u.uid=$user_id_get Return collect(s.preferred_label) as preferred_labels''',
+                user_id_get=user_id_get
             ))
+            return result
+        def get_planned_occ(tx, user_id_get):
+            result = list(tx.run(
+
+                '''MATCH (u:User)-[r:plannedOccupation]->(o:Occupation) where u.uid=$user_id_get Return collect(o.OccupationUri) as planned_occupation''',
+                user_id_get=user_id_get
+            ))
+            return result
+        def get_occupations(tx, user_id_get):
+            result = list(tx.run(
+
+                '''MATCH (u:User)-[r:hasOccupation]->(o:Occupation) where u.uid=$user_id_get Return collect(o.OccupationUri) as occupations''',
+                user_id_get=user_id_get
+            ))
+            return result
         db = get_db()
-        result = flatten(db.execute_read(get_users))
-        return result
+        competencies = db.execute_read(get_skills, user_id_get=user_id_get)
+        planned_occ = db.execute_read(get_planned_occ, user_id_get=user_id_get)
+        occupations = db.execute_read(get_occupations, user_id_get=user_id_get)
+        
+        return {
+            "preferred_labels": flatten(flatten(competencies)),
+            "planned_occupation": flatten(flatten(planned_occ)),
+            "occupations": flatten(flatten(occupations))
+        }
+
     
     @swagger.doc({
         'responses': {
@@ -701,6 +725,7 @@ class User(Resource):
     })
     def post(self):
         user_arg = reqparse.RequestParser()
+        user_arg.add_argument("UserID", type=str, help="This is a uuid4 ID", required=True)
         user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
         user_arg.add_argument("Competencies", action = "append", help="This is a list", required=True)
         user_arg.add_argument("ExistingOccupations", action = "append", help="This is a list")
@@ -708,9 +733,8 @@ class User(Resource):
         competencies = user_arg.parse_args()["Competencies"]
         uri = user_arg.parse_args()["OccupationUri"]
         existing_occupations = user_arg.parse_args()["ExistingOccupations"]
-
-        # user_uids = User.get(self)
-        # uid =  0 if not user_uids else max(user_uids) + 1
+        user_id = user_arg.parse_args()["UserID"]
+        
         assert user_id != -1
         uid = user_id
         name = f"User {uid}"

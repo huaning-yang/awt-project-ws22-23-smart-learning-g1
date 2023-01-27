@@ -96,7 +96,10 @@
 
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
-				<br>
+				<div display="flex" flex-direction="column" justify-content="flex-start">
+				<input id="userID" class="form-control" type="text" name="restoreEuropassText" placeholder="UserID">	
+				<button id="restoreEuropassBtn" type="button" onclick=restoreUser()> Restore User </button>
+				</div>
                 <div class="container">
                     <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
                     <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>

@@ -16,24 +16,34 @@ function union(setA, setB) {
 	return _union;
   }
 
+function difference(setA, setB) {
+	const _difference = new Set(setA);
+	for (const elem of setB) {
+	  _difference.delete(elem);
+	}
+	return _difference;
+  }
+
   // Action on each reload of the page
   window.onload = function () {
-
-	curr_occupation = "none"
-
-	let xhr = new XMLHttpRequest();
-	xhr.open("GET", "http://localhost:5001/userid", true);
-	xhr.setRequestHeader("Accept", "application/json");
-	xhr.send();
-  
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === XMLHttpRequest.DONE) {
-	  	console.log(xhr.status);
-	  	userID = JSON.parse(xhr.response)["userID"]
-	 	}
-		var userText = document.getElementById("userText");
-		userText.innerHTML = "Your UserID is: " + userID;
-	};
+        localStorage.setItem("hasCodeRunBefore", true);
+		curr_occupation = "none"
+		
+		let xhr = new XMLHttpRequest();
+		xhr.open("GET", "http://localhost:5001/userid", true);
+		xhr.setRequestHeader("Accept", "application/json");
+		xhr.send();
+		
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				console.log(xhr.status);
+				userID = JSON.parse(xhr.response)["userID"]
+			}
+			var userText = document.getElementById("userText");
+			userText.innerHTML = "Your UserID is: " + userID;
+			console.log("LOADED")
+			console.log(userID)
+		}
   
   }
 const copyUserID = async () => {
@@ -44,9 +54,6 @@ const copyUserID = async () => {
 	  console.error('Failed to copy: ', err);
 	}
   }
-
-
-
 
 function search_course() {
 	let input = document.getElementById('searchbar').value
@@ -116,19 +123,25 @@ function clearFilter() {
 function saveCompetenices() {
 	var items = document.getElementsByName("skill");
 	var selectedItems = [];
+	var unselectedItems = [];
 	for (var i = 0; i < items.length; i++) {
-		if (items[i].type == "checkbox" && items[i].checked == true) selectedItems.push(items[i].value);
+		if (items[i].type == "checkbox" && items[i].checked == true) {
+			selectedItems.push(items[i].value);
+		} else {
+			unselectedItems.push(items[i].value);
+		}
 	}
-	comp_set = new Set(selectedItems)
+	comp_set = difference(comp_set, unselectedItems)
+	comp_set = union(comp_set, selectedItems)
 	// saved_competencies = saved_competencies.concat(selectedItems)
-	console.log([...comp_set]);
+	//console.log([...comp_set]);
 
 }
 
 function getOccupation() {
 	var sel = document.getElementById("occupation-select")
 	var occupation = sel.options[sel.selectedIndex].text
-	console.log(sel.options[sel.selectedIndex].text)
+	// console.log(sel.options[sel.selectedIndex].text)
 
 	if (occupation != "none"){
 
@@ -151,11 +164,12 @@ function commitUserToDatabase() {
 
 	let merged_skills = union(europass_set, comp_set)
 
-	console.log(JSON.stringify({
-		"OccupationUri": curr_occupation,
-		"Competencies": [...merged_skills]
-	}));
+	// console.log(JSON.stringify({
+	// 	"OccupationUri": curr_occupation,
+	// 	"Competencies": [...merged_skills]
+	// }));
 	xhr.send(JSON.stringify({
+		"UserID": userID,
 		"OccupationUri": curr_occupation,
 		"Competencies": [...merged_skills],
 		"ExistingOccupations": [...existing_occupations]
@@ -170,7 +184,7 @@ function commitUserToDatabase() {
 
 function updateExistingCompetencies() {
 	const selectedOccupation = document.getElementById("occupation-select").value;
-	console.log(selectedOccupation)
+	// console.log(selectedOccupation)
 	const exisitingCompetencies = document.getElementById("existing-comp");
 	var box = document.getElementById("exist")
 	var param = selectedOccupation;
@@ -180,7 +194,7 @@ function updateExistingCompetencies() {
 	xhr.onreadystatechange = function () {
 		if (this.readyState == 4 && this.status == 200) {
 			data = this.responseText;
-			console.log(data);
+			//console.log(data);
 			var recommenderResponse = JSON.parse(data);
 			exisitingCompetencies.remove();
 			var form = document.createElement("form");
@@ -199,6 +213,7 @@ function updateExistingCompetencies() {
 
 		}
 	};
+	setTimeout(() => {checkCheckboxes();}, 1000);
 
 	xhr.open("GET", "http://localhost:5001/occupationessential?occupationUri=" + encodeURIComponent(param), true);
 	xhr.setRequestHeader("Content-type", "application/json");
@@ -286,8 +301,6 @@ function storeEuropassSkills() {
 	const europass_url = document.getElementById('europassURL').value;
 	const confirmation = document.getElementById('europass');
 
-	console.log(typeof(europass_url))
-
 	if (europass_url) {
 		// strValue was non-empty string, true, 42, Infinity, [], ...
 	
@@ -313,6 +326,35 @@ function storeEuropassSkills() {
 		alert("Europass-URL is empty!");
 	}
 }
+function restoreUser(){
+	userID = document.getElementById('userID').value;
+	let xhr = new XMLHttpRequest();
+		xhr.open("GET", "http://localhost:5001/users?userID=" + userID, true);
+		xhr.setRequestHeader("Accept", "application/json");
+		xhr.send();
+	
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				console.log(xhr.status);
+				existing_occupations = new Set(JSON.parse(xhr.responseText)["occupations"]);
+				comp_set = new Set(JSON.parse(xhr.responseText)["preferred_labels"]);
+				
+				// console.log(comp_set)
+				if (JSON.parse(xhr.responseText)["planned_occupation"]) {
+					curr_occupation = JSON.parse(xhr.responseText)["planned_occupation"][0];
+					selectOccupation(curr_occupation);
+					updateExistingCompetencies();
+					
+					var userText = document.getElementById("userText");
+					userText.innerHTML = "Your UserID is: " + userID;
+
+					//setTimeout(() => {checkCheckboxes();}, 1000);
+					
+					
+				}
+			}
+		};
+}
 
 function showEuropassImports(){
 	var div = document.getElementById("europassContainer");
@@ -328,13 +370,16 @@ function showEuropassImports(){
 }
 
 function checkCheckboxes() {
+	const skillSet = union(comp_set, europass_set)
 	const checkboxes = document.getElementsByName("skill")
-	const merged_skills = union(europass_set, comp_set)
-
 	for (const cb of checkboxes) {
-		if (merged_skills.has(cb.value)) {
+		if (skillSet.has(cb.value)) {
 			cb.checked = true;
 		}
 	}
 
+}
+function selectOccupation(valueToSelect) {    
+    let element = document.getElementById("occupation-select");
+    element.value = valueToSelect;
 }
