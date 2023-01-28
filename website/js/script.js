@@ -69,14 +69,11 @@ const copyUserID = async () => {
 // }
 
 function filterCourses() {
-  const selected = document.querySelectorAll(
-    "#searchbar option:checked"
-  );
+  const selected = document.querySelectorAll("#searchbar option:checked");
   const values = Array.from(selected).map((el) => el.value);
-
   var params = "?";
   for (const value of values) {
-    params = params + "skill=" + encodeURIComponent(value) + "&";
+    params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
   params = params.substring(0, params.length - 1);
   // All the elements of the array the array
@@ -86,20 +83,41 @@ function filterCourses() {
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       data = this.responseText;
-      // console.log(data);
+      //   console.log(data);
       var coursesResponse = JSON.parse(data);
-      let x = document.getElementsByClassName("course");
-      for (i = 0; i < x.length; i++) {
-        x[i].style.display = "none";
-      }
+      console.log(coursesResponse);
+      courseList = document.getElementById("courseList");
+      courseList.replaceChildren();
+
       for (var j = 0; j < coursesResponse.length; j++) {
         var course = coursesResponse[j];
-        // console.log(course.course_name);
-        for (i = 0; i < x.length; i++) {
-          if (x[i].dataset["uuid"].includes(course.course_id)) {
-            x[i].style.display = "list-item";
-          }
-        }
+
+		// <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
+		// 					<div class="d-flex w-100 justify-content-between">
+		// 					  <h5 class="mb-1">' . $course->course_name . '
+		// 					  </h5>
+      	// 					  <small>' . $course->course_datetime . '</small>
+		// 						</div>
+		// 						<small>' . $course->course_location . '</small>
+		// 						</a>
+
+        var courseItem = document.createElement("a");
+        courseItem.classList.add("course","list-group-item","list-group-item-action","flex-column","align-items-start");
+        courseItem.setAttribute("data-uuid", course.course_id);
+		divItem = document.createElement("div");
+		divItem.classList.add("d-flex","w-100","justify-content-between");
+		h5Item = document.createElement("h5");
+		h5Item.classList.add("mb-1");
+		h5Item.innerHTML = course.course_name;
+		smallItem = document.createElement("small");
+		smallItem.innerHTML = course.course_datetime;
+		divItem.appendChild(h5Item);
+		divItem.appendChild(smallItem);
+		courseItem.appendChild(divItem);
+		smallItem = document.createElement("small");
+		smallItem.innerHTML = course.course_location;
+		courseItem.appendChild(smallItem);
+        courseList.appendChild(courseItem);
       }
     }
   };
@@ -428,7 +446,7 @@ $(document).ready(function () {
   $(".searchbar").select2({
     ajax: {
       url: "http://localhost:5001/skillsFilterable",
-	  delay: 250,
+      delay: 250,
       dataType: "json",
       data: function (params) {
         var query = {
@@ -443,14 +461,21 @@ $(document).ready(function () {
           results: data.items,
         };
       },
-	  cache: true
-	},
-	    //   debug: true,
-      placeholder: "Search competencies...",
-      minimumInputLength: 2
+      cache: true,
+    },
+    //   debug: true,
+    placeholder: "Search competencies...",
+    minimumInputLength: 2,
   });
 });
 
-function SelectRecommendation()  {  
-	console.log("SelectRecommendation");
- }
+function SelectRecommendation() {
+  console.log("SelectRecommendation");
+  const selected = document.querySelectorAll(
+    "#recommendation-items option:checked"
+  );
+  // const values = Array.from(selected).map((el) => el.value);
+  console.log(selected);
+  var newOption = new Option(selected[0].text, selected[0].value, false, true);
+  $("#searchbar").append(newOption).trigger("change");
+}

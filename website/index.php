@@ -169,7 +169,7 @@
 		</div>
 
 
-		<div class="list-group courseList">
+		<div id="courseList" class="list-group courseList">
 			<?php
 			$json = file_get_contents('http://course-api-service/');
 			$obj = json_decode($json);
