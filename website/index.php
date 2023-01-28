@@ -7,14 +7,14 @@
 	</title>
 
 	<!-- linking the stylesheet(CSS) -->
+	<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.js"></script>
 	<link rel="stylesheet" type="text/css" href="./css/style.css">
 	<script src="./js/script.js"></script>
-	<!-- <script src="./js/multiselect-dropdown.js" ></script> -->
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" />
-	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" /> -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.js"></script>
-	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script> -->
 </head>
 
 <body>
@@ -54,16 +54,16 @@
 		<img src="../resources/header.png" alt="HeaderImage" class="center" style="width:100%;">
 	</div>
 	<hr>
-	<div class="user"> 
-		<div align-> 
-			<h5 id="userText"> Welcome </h5> 
+	<div class="user">
+		<div align->
+			<h5 id="userText"> Welcome </h5>
 		</div>
 		<div>
 			<input type="button" value="Copy" onclick=copyUserID();>
 		</div>
 	</div>
 	<div class="container">
-		
+
 		<div class="row" id="user">
 			<label for="occupation-select">Planned Occupation</label><br>
 			<select id="occupation-select" onchange="getOccupation(); updateExistingCompetencies(); getUnobtainableSkills();">
@@ -79,8 +79,8 @@
 			</select>
 			<div class="row" id="existing-competencies">
 				<label for="existing-competencies-select">Existing Competencies</label><br>
-				<!-- 
-					<select multiple id="existing-competencies-select">
+
+				<select multiple id="existing-competencies-select">
 					<?php
 					$json = file_get_contents('http://course-api-service/skills');
 					$obj = json_decode($json);
@@ -89,43 +89,45 @@
 						echo "<option class='existing-skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
 					}
 
-					?> 
-				-->
+					?>
+				</select>
+
 				<div id="exist" class="scrollable">
 					<form id="existing-comp"> </form>
 
 				</div>
 				<input type="button" value="Save" onclick=saveCompetenices();>
 				<div display="flex" flex-direction="column" justify-content="flex-start">
-				<input id="userID" class="form-control" type="text" name="restoreEuropassText" placeholder="UserID">	
-				<button id="restoreEuropassBtn" type="button" onclick=restoreUser()> Restore User </button>
-				</div>
-                <div class="container">
-                    <input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
-                    <button id ="europassbtn" type="button" onclick=storeEuropassSkills() >Import Europass</button>
-                </div>
-                <div>
-					<p id="europass"></p>
-				</div>
-				<div id="europassContainer" class="europass"> 
-					<ul id="europassList"> </ul> 
+					<input id="userID" class="form-control" type="text" name="restoreEuropassText" placeholder="UserID">
+					<button id="restoreEuropassBtn" type="button" onclick=restoreUser()> Restore User </button>
 				</div>
 				<div class="container">
-					<input type="button" value="Commit" onclick=commitUserToDatabase();> 
+					<input id="europassURL" class="form-control" type="text" name="europassURL" placeholder="Europass URL">
+					<button id="europassbtn" type="button" onclick=storeEuropassSkills()>Import Europass</button>
 				</div>
-				
+				<div>
+					<p id="europass"></p>
+				</div>
+				<div id="europassContainer" class="europass">
+					<ul id="europassList"> </ul>
+				</div>
+				<div class="container">
+					<input type="button" value="Commit" onclick=commitUserToDatabase();>
+				</div>
 			</div>
 		</div>
 
 		<div class="row" id="search">
 			<form id="search-form" action="" method="POST" enctype="multipart/form-data">
 				<div class="form-group col-xs-9">
-					<input id="searchbar" onkeyup="search_course()" class="form-control" type="text" name="search" placeholder="Search courses..">
+					<select id="searchbar" class="searchbar" name="states[]" multiple="multiple">
+
+					</select>
 				</div>
 
 				<div class="row" id="recommendations">
 					<label for="recommendation-items">Recommendations</label><br>
-					<select multiple id="recommendation-items">
+					<select multiple id="recommendation-items" onchange='SelectRecommendation();'>
 
 					</select>
 				</div>
@@ -137,18 +139,6 @@
 					</select>
 				</div>
 
-				<!-- <div class="row" id="competencies">
-						<label for="competency-select">Filter Competencies</label><br>
-						<select multiple id="competency-select">
-							<!-- <?php
-									// $json = file_get_contents('http://course-api-service/skills');
-									// $obj = json_decode($json);
-									// $skills = $obj;
-									// foreach ($skills as $skill) {
-									// 	echo "<option class='skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
-									// }
-									?> -->
-				</select>
 				<div class="row" id="date">
 					<label for="date-select">Filter Date</label><br>
 					<input type="date" id="date-select" name="date">

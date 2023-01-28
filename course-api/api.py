@@ -26,6 +26,7 @@ user_id = -1
 app = Flask(__name__)
 # Instantiate the app
 CORS(app, resources={r"/*": {"origins": "http://localhost:5002", "headers": "Content-Type, Authorization"}})
+# CORS(app)
 api = Api(app)
 
 FlaskJSON(app)
@@ -36,12 +37,6 @@ def output_json(data, code, headers=None):
 
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
 driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
-
-
-def get_db_connection():
-    conn = sqlite3.connect('/usr/src/app/data/database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
 
 def get_db():
     if not hasattr(g, 'neo4j_db'):
@@ -217,12 +212,60 @@ class SkillList(Resource):
             # For performance reasons limit for now
             return list(tx.run(
                 '''
-                MATCH (skill_name:Skill) RETURN skill_name LIMIT 25
+                MATCH (skill_name:Skill) RETURN skill_name LIMIT 30
                 '''
             ))
+        
         db = get_db()
         result = db.execute_read(get_skills)
         return [serialize_skill(record['skill_name']) for record in result]
+
+class SkillListFilterable(Resource):
+    @swagger.doc({
+        'tags': ['skill_name'],
+        'summary': 'Find all skills',
+        'description': 'Returns a list of skills',
+        'parameters': [
+            {
+            'name': 'search',
+            'description': 'Search term to filter on',
+            'in': 'query',
+            'type': 'string'
+        }],
+        'responses': {
+            '200': {
+                'description': 'A list of skills',
+                'schema': {
+                    'type': 'array',
+                    'items': SkillModel,
+                }
+            }
+        }
+    })
+    def get(self):
+        searchterm = request.args.get('search')
+        if searchterm is None:
+            searchterm = ''
+        def get_skills(tx):
+            # For performance reasons limit for now
+            print(searchterm)
+            return list(tx.run(
+                '''
+                MATCH (skill_name:Skill) WHERE skill_name.preferred_label CONTAINS "''' + searchterm +  '''" RETURN skill_name LIMIT 30
+                '''
+            ))
+        
+        db = get_db()
+        result = db.execute_read(get_skills)
+        # return {'items'}
+        return {'items': [serialize_skillFilterable(record['skill_name']) for record in result]}
+
+def serialize_skillFilterable(skill_name):
+    return {
+        'id': skill_name['concept_uri'],
+        # 'description': skill_name['description'],
+        'text': skill_name['preferred_label']
+    }
 
 class OccupationUnobtainableSkills(Resource):
     @swagger.doc({
@@ -589,7 +632,9 @@ class MissingEssential(Resource):
                 '''
             ))
         def get_personSkills(tx):
-            query = f'''MATCH (u:User)-[r:hasSkill]->(s:Skill) WHERE u.uid = {personID} RETURN s'''
+            query = f'''
+                 MATCH (u:User)-[r:hasSkill]->(s:Skill) WHERE u.uid = "''' + personID + '''" RETURN s
+            '''
             return list(tx.run(query))
         def get_differences(essential, person):
             return [x for x in essential if x not in person]
@@ -911,6 +956,7 @@ def flatten(l):
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')
 api.add_resource(SkillList, '/skills')
+api.add_resource(SkillListFilterable, '/skillsFilterable')
 api.add_resource(Skills, '/filterSkills')
 api.add_resource(SkillLabel, '/label')
 api.add_resource(MissingEssential, '/essentials')
