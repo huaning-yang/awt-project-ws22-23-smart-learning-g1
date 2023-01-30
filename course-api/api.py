@@ -3,9 +3,9 @@
 # Import framework
 from time import strftime
 from flask_restful import Resource, reqparse
-from flask import Flask, request, jsonify, g, send_from_directory #added to top of file
+from flask import Flask, request, jsonify, g, send_from_directory  # added to top of file
 from flask.json import JSONEncoder
-from flask_cors import CORS #added to top of file
+from flask_cors import CORS  # added to top of file
 from flask_restful_swagger_2 import Api, swagger, Schema
 from flask_json import FlaskJSON, json_response
 import sqlite3
@@ -25,18 +25,23 @@ user_id = -1
 
 app = Flask(__name__)
 # Instantiate the app
-CORS(app, resources={r"/*": {"origins": "http://localhost:5002", "headers": "Content-Type, Authorization"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:5002",
+     "headers": "Content-Type, Authorization"}})
 # CORS(app)
 api = Api(app)
 
 FlaskJSON(app)
 
+
 @api.representation('application/json')
 def output_json(data, code, headers=None):
     return json_response(data_=data, headers_=headers, status_=code)
 
+
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
-driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
+driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io",
+                              auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
+
 
 def get_db():
     if not hasattr(g, 'neo4j_db'):
@@ -70,6 +75,7 @@ class CourseModel(Schema):
         }
     }
 
+
 def serialize_course(course):
     return {
         'course_description': course['course_description'],
@@ -78,6 +84,7 @@ def serialize_course(course):
         'course_location': course['course_location'],
         'course_datetime': course['course_datetime'].strftime('%d.%m.%Y') if course['course_datetime'] != datetime.datetime.min else "No dates available"
     }
+
 
 class CourseList(Resource):
     @swagger.doc({
@@ -106,7 +113,6 @@ class CourseList(Resource):
         return [serialize_course(record['course']) for record in result]
 
 
-
 class Courses(Resource):
     @swagger.doc({
         'tags': ['course'],
@@ -123,7 +129,21 @@ class Courses(Resource):
                     'type': 'string'
                 },
                 'collectionFormat': 'multi'
+            },
+            {
+                'name': 'course_location',
+                'in': 'formData',
+                'required': True,
+                'description': 'Location of the course',
+                'type': 'string'
             }
+            # {
+            #     'name': 'course_date',
+            #     'in': 'formData',
+            #     'required': True,
+            #     'description': 'Date of the course',
+            #     'type': 'string'
+            # }
         ],
         'responses': {
             '200': {
@@ -137,17 +157,21 @@ class Courses(Resource):
     })
     def get(self):
         skills = request.args.getlist('skill_uid')
+        location = request.args.get("course_location")
+        # date = request.args.get("course_date")
+
         def get_filtered_courses(tx):
             return list(tx.run(
-                '''
+                f'''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in ["''' + ','.join(skills) +  '''"]
+                WHERE s.course_location=~{location} and s.concept_uri in ["''' + ','.join(skills) + '''"]
                 RETURN course
                 '''
             ))
         db = get_db()
         result = db.execute_read(get_filtered_courses)
         return [serialize_course(record['course']) for record in result]
+
 
 class LocationList(Resource):
     @swagger.doc({
@@ -177,7 +201,8 @@ class LocationList(Resource):
         db = get_db()
         result = db.execute_read(get_locations)
         return [record['location'] for record in result]
-        
+
+
 class SkillModel(Schema):
     type = 'object'
     properties = {
@@ -191,6 +216,7 @@ class SkillModel(Schema):
             'type': 'string',
         }
     }
+
 
 class SkillList(Resource):
     @swagger.doc({
@@ -215,10 +241,11 @@ class SkillList(Resource):
                 MATCH (skill_name:Skill) RETURN skill_name LIMIT 30
                 '''
             ))
-        
+
         db = get_db()
         result = db.execute_read(get_skills)
         return [serialize_skill(record['skill_name']) for record in result]
+
 
 class SkillListFilterable(Resource):
     @swagger.doc({
@@ -227,11 +254,11 @@ class SkillListFilterable(Resource):
         'description': 'Returns a list of skills',
         'parameters': [
             {
-            'name': 'search',
-            'description': 'Search term to filter on',
-            'in': 'query',
-            'type': 'string'
-        }],
+                'name': 'search',
+                'description': 'Search term to filter on',
+                'in': 'query',
+                'type': 'string'
+            }],
         'responses': {
             '200': {
                 'description': 'A list of skills',
@@ -246,19 +273,21 @@ class SkillListFilterable(Resource):
         searchterm = request.args.get('search')
         if searchterm is None:
             searchterm = ''
+
         def get_skills(tx):
             # For performance reasons limit for now
             print(searchterm)
             return list(tx.run(
                 '''
-                MATCH (skill_name:Skill) WHERE skill_name.preferred_label CONTAINS "''' + searchterm +  '''" RETURN skill_name LIMIT 30
+                MATCH (skill_name:Skill) WHERE skill_name.preferred_label CONTAINS "''' + searchterm + '''" RETURN skill_name LIMIT 30
                 '''
             ))
-        
+
         db = get_db()
         result = db.execute_read(get_skills)
         # return {'items'}
         return {'items': [serialize_skillFilterable(record['skill_name']) for record in result]}
+
 
 def serialize_skillFilterable(skill_name):
     return {
@@ -267,17 +296,18 @@ def serialize_skillFilterable(skill_name):
         'text': skill_name['preferred_label']
     }
 
+
 class OccupationUnobtainableSkills(Resource):
     @swagger.doc({
         'tags': ['occupation'],
         'description': 'Returns list of skills not covered by any courses',
         'parameters': [
             {
-            'name': 'occupationUri',
-            'description': 'The concept uri of an occupation',
-            'in': 'query',
-            'type': 'string'
-        }],
+                'name': 'occupationUri',
+                'description': 'The concept uri of an occupation',
+                'in': 'query',
+                'type': 'string'
+            }],
         'responses': {
             '200': {
                 'description': 'list of unobtainable skills',
@@ -290,11 +320,12 @@ class OccupationUnobtainableSkills(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
+
         def get_unobtainable(tx):
             return list(tx.run(
                 '''
                 MATCH (o1:Occupation)-[r1:requires {type: 'essential'}]->(s1:Skill) 
-                WHERE o1.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                WHERE o1.OccupationUri in ["''' + ','.join(occupation) + '''"]
                 AND NOT ()-[:PROVIDE_SKILL]->(s1) 
                 RETURN s1
                 '''
@@ -306,6 +337,7 @@ class OccupationUnobtainableSkills(Resource):
             for s in sk:
                 unobtainable.append(serialize_skill(s))
         return unobtainable
+
 
 class SkillLabel(Resource):
     @swagger.doc({
@@ -320,7 +352,7 @@ class SkillLabel(Resource):
             }
         ],
         'responses': {
-            '200':{
+            '200': {
                 'description': 'A list of pref label skills',
                 'schema': {
                     'type': 'string'
@@ -330,16 +362,18 @@ class SkillLabel(Resource):
     })
     def get(self):
         skills = request.args.getlist('skilluri')
+
         def get_pref_label(tx):
             return list(tx.run(
                 '''
                 MATCH (s:Skill)
-                WHERE s.concept_uri in ["''' + ','.join(skills) +  '''"]
+                WHERE s.concept_uri in ["''' + ','.join(skills) + '''"]
                 RETURN s.preferred_label'''
             ))
         db = get_db()
         result = db.execute_read(get_pref_label)
         return result[0]
+
 
 class Skills(Resource):
     @swagger.doc({
@@ -371,11 +405,12 @@ class Skills(Resource):
     })
     def get(self):
         courses = request.args.getlist('course')
+
         def get_filtered_skills(tx):
             return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
-                WHERE course.course_id in ["''' + ','.join(courses) +  '''"]
+                WHERE course.course_id in ["''' + ','.join(courses) + '''"]
                 RETURN skill_name
                 '''
             ))
@@ -383,12 +418,14 @@ class Skills(Resource):
         result = db.execute_read(get_filtered_skills)
         return [serialize_skill(record['skill_name']) for record in result]
 
+
 def serialize_skill(skill_name):
     return {
         'concept_uri': skill_name['concept_uri'],
         'description': skill_name['description'],
         'preferred_label': skill_name['preferred_label']
     }
+
 
 class OccupationModel(Schema):
     type = 'object'
@@ -401,11 +438,13 @@ class OccupationModel(Schema):
         }
     }
 
+
 def serialize_occupation(occupation):
     return {
         'OccupationUri': occupation['OccupationUri'],
         'preferred_label': occupation['preferred_label']
     }
+
 
 class OccupationURI(Resource):
     @swagger.doc({
@@ -431,11 +470,12 @@ class OccupationURI(Resource):
     })
     def get(self):
         label = request.args.getlist('occupation')
+
         def get_uri(tx):
             return list(tx.run(
                 '''
                 MATCH (o:Occupation)
-                WHERE o.preferred_label in ["''' + ','.join(label) +  '''"]
+                WHERE o.preferred_label in ["''' + ','.join(label) + '''"]
                 RETURN o.OccupationUri
                 '''
             ))
@@ -443,17 +483,18 @@ class OccupationURI(Resource):
         result = db.execute_read(get_uri)
         return result
 
+
 class OccupationEssential(Resource):
     @swagger.doc({
         'tags': ['occupation'],
         'description': 'Returns the essential skills of a occupation',
         'parameters': [
             {
-            'name': 'occupationUri',
-            'description': 'One occupation (uri) for which the essential skills are needed',
-            'in': 'query',
-            'type': 'string'
-        }],
+                'name': 'occupationUri',
+                'description': 'One occupation (uri) for which the essential skills are needed',
+                'in': 'query',
+                'type': 'string'
+            }],
         'responses': {
             '200': {
                 'description': 'list of essential skills',
@@ -466,11 +507,12 @@ class OccupationEssential(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
+
         def get_essential_skills(tx):
-                return list(tx.run(
+            return list(tx.run(
                 '''
                 MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='essential'
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) + '''"] AND r.type='essential'
                 RETURN s
                 '''
             ))
@@ -480,8 +522,9 @@ class OccupationEssential(Resource):
         for essential in essentials:
             for sk in essential:
                 returnSkill.append(serialize_skill(sk))
-        
+
         return returnSkill
+
 
 class OccupationOptional(Resource):
     @swagger.doc({
@@ -489,11 +532,11 @@ class OccupationOptional(Resource):
         'description': 'Returns the optional skills of a occupation',
         'parameters': [
             {
-            'name': 'occupationUri',
-            'description': 'One occupation (uri) for which the essential skills are needed',
-            'in': 'query',
-            'type': 'string'
-        }],
+                'name': 'occupationUri',
+                'description': 'One occupation (uri) for which the essential skills are needed',
+                'in': 'query',
+                'type': 'string'
+            }],
         'responses': {
             '200': {
                 'description': 'list of optional skills',
@@ -506,11 +549,12 @@ class OccupationOptional(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
+
         def get_optional_skills(tx):
-                return list(tx.run(
+            return list(tx.run(
                 '''
                 MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='optional'
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) + '''"] AND r.type='optional'
                 RETURN s
                 '''
             ))
@@ -521,6 +565,8 @@ class OccupationOptional(Resource):
             for sk in optional:
                 returnSkill.append(serialize_skill(sk))
         return returnSkill
+
+
 class OccupationList(Resource):
     @swagger.doc({
         'tags': ['occupation'],
@@ -547,17 +593,18 @@ class OccupationList(Resource):
         result = db.execute_read(get_occupations)
         return [serialize_occupation(record['occupation']) for record in result]
 
+
 class OccupationRelatedSkills(Resource):
     @swagger.doc({
         'tags': ['occupation'],
         'description': 'Returns a list of skills that are related to the occupation, but not required',
         'parameters': [
             {
-            'name': 'occupationUri',
-            'description': 'One occupation uri',
-            'in': 'query',
-            'type': 'string'
-        }],
+                'name': 'occupationUri',
+                'description': 'One occupation uri',
+                'in': 'query',
+                'type': 'string'
+            }],
         'responses': {
             '200': {
                 'description': 'list of essential skills',
@@ -570,11 +617,12 @@ class OccupationRelatedSkills(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
+
         def get_relatedSkills(tx):
             return list(tx.run(
                 '''
                 MATCH (o1:Occupation)-[r1:requires {type: 'essential'}]->(s1:Skill)<-[r2:requires {type: 'essential'}]-(o2:Occupation)-[r3:requires]->(s2:Skill)
-                WHERE o1 <> o2 and s1<>s2 AND o1.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                WHERE o1 <> o2 and s1<>s2 AND o1.OccupationUri in ["''' + ','.join(occupation) + '''"]
                 AND NOT (o1)-[:requires]->(s2)
                 RETURN s2.preferred_label, count(s2) as s2frequency
                 ORDER BY s2frequency DESC
@@ -595,21 +643,21 @@ class MissingEssential(Resource):
         'description': 'Recommends keywords based on rules using missing essential skills',
         'parameters': [
             {
-            'name': 'occupationUri',
-            'description': 'One or more Occupations (uri) to recommend missing skills',
-            'in': 'query',
-            'type': 'array',
-            'items': {
-                'type': 'string'
+                'name': 'occupationUri',
+                'description': 'One or more Occupations (uri) to recommend missing skills',
+                'in': 'query',
+                'type': 'array',
+                'items': {
+                    'type': 'string'
+                },
+                'collectionFormat': 'multi'
             },
-            'collectionFormat': 'multi'
-        },
-        {
-            'name': 'personID',
-            'description': 'Identifier of a person',
-            'in': 'query',
-            'type': 'integer'
-        }],
+            {
+                'name': 'personID',
+                'description': 'Identifier of a person',
+                'in': 'query',
+                'type': 'integer'
+            }],
         'responses': {
             '200': {
                 'description': 'list of missing skills',
@@ -623,19 +671,22 @@ class MissingEssential(Resource):
     def get(self):
         occupation = request.args.getlist('occupationUri')
         personID = request.args.get('personID')
+
         def get_essentialSkills(tx):
             return list(tx.run(
                 '''
                 MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type="essential"
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) + '''"] AND r.type="essential"
                 RETURN s
                 '''
             ))
+
         def get_personSkills(tx):
             query = f'''
                  MATCH (u:User)-[r:hasSkill]->(s:Skill) WHERE u.uid = "''' + personID + '''" RETURN s
             '''
             return list(tx.run(query))
+
         def get_differences(essential, person):
             return [x for x in essential if x not in person]
         db = get_db()
@@ -646,19 +697,18 @@ class MissingEssential(Resource):
         for essential in essentials:
             for skill_name in essential:
                 essentialSkills_uri.append(skill_name['concept_uri'])
-                
 
         person = []
         for sk in skills:
             for s in sk:
                 person.append(s['concept_uri'])
 
-        missing = get_differences(essentialSkills_uri,person)
+        missing = get_differences(essentialSkills_uri, person)
         returnSkill = []
         for skill_name in missing:
             for essential in essentials:
                 for sk in essential:
-                    if(sk['concept_uri'] == skill_name):
+                    if (sk['concept_uri'] == skill_name):
                         returnSkill.append(serialize_skill(sk))
         return returnSkill
 
@@ -668,7 +718,8 @@ class ApiDocs(Resource):
         if not path:
             path = 'index.html'
         return send_from_directory('swaggerui', path)
-    
+
+
 class User(Resource):
     @swagger.doc({
         'tags': ['users'],
@@ -687,6 +738,7 @@ class User(Resource):
     })
     def get(self):
         user_id_get = request.args.getlist('userID')[0]
+
         def get_skills(tx, user_id_get):
             result = list(tx.run(
 
@@ -694,6 +746,7 @@ class User(Resource):
                 user_id_get=user_id_get
             ))
             return result
+
         def get_planned_occ(tx, user_id_get):
             result = list(tx.run(
 
@@ -701,6 +754,7 @@ class User(Resource):
                 user_id_get=user_id_get
             ))
             return result
+
         def get_occupations(tx, user_id_get):
             result = list(tx.run(
 
@@ -712,14 +766,13 @@ class User(Resource):
         competencies = db.execute_read(get_skills, user_id_get=user_id_get)
         planned_occ = db.execute_read(get_planned_occ, user_id_get=user_id_get)
         occupations = db.execute_read(get_occupations, user_id_get=user_id_get)
-        
+
         return {
             "preferred_labels": flatten(flatten(competencies)),
             "planned_occupation": flatten(flatten(planned_occ)),
             "occupations": flatten(flatten(occupations))
         }
 
-    
     @swagger.doc({
         'responses': {
             '200': {
@@ -770,34 +823,38 @@ class User(Resource):
     })
     def post(self):
         user_arg = reqparse.RequestParser()
-        user_arg.add_argument("UserID", type=str, help="This is a uuid4 ID", required=True)
-        user_arg.add_argument("OccupationUri", type=str, help="This is a node name", required=True)
-        user_arg.add_argument("Competencies", action = "append", help="This is a list", required=True)
-        user_arg.add_argument("ExistingOccupations", action = "append", help="This is a list")
+        user_arg.add_argument("UserID", type=str,
+                              help="This is a uuid4 ID", required=True)
+        user_arg.add_argument("OccupationUri", type=str,
+                              help="This is a node name", required=True)
+        user_arg.add_argument("Competencies", action="append",
+                              help="This is a list", required=True)
+        user_arg.add_argument("ExistingOccupations",
+                              action="append", help="This is a list")
 
         competencies = user_arg.parse_args()["Competencies"]
         uri = user_arg.parse_args()["OccupationUri"]
         existing_occupations = user_arg.parse_args()["ExistingOccupations"]
         user_id = user_arg.parse_args()["UserID"]
-        
+
         assert user_id != -1
         uid = user_id
         name = f"User {uid}"
 
         def delete_old_user(tx, uid):
             user = tx.run(
-                '''MATCH (n:User {uid:$uid}) DETACH DELETE n''', 
+                '''MATCH (n:User {uid:$uid}) DETACH DELETE n''',
                 uid=uid)
             user = list(user)
             return user
-        
+
         def create_user(tx, uid, name):
             user = tx.run(
-                '''CREATE (u:User {uid:$uid, name:$name}) RETURN *''', 
+                '''CREATE (u:User {uid:$uid, name:$name}) RETURN *''',
                 uid=uid, name=name)
             user = list(user)
             return user
-            
+
         def write_user_occupation(tx, uri, uid):
             result = tx.run(
                 ''' MATCH (o:Occupation) 
@@ -806,11 +863,11 @@ class User(Resource):
                     WHERE u.uid = $uid
                     MERGE (u) -[:plannedOccupation]-> (o) 
                     RETURN *
-                ''', 
+                ''',
                 uri=uri, uid=uid)
             records = list(result)
             return records
-        
+
         def write_user_competencies(tx, skill_name, uid):
             result = tx.run(
                 ''' MATCH (u:User) 
@@ -819,10 +876,11 @@ class User(Resource):
                     WHERE s.preferred_label = $skill_name
                     CREATE (u) -[:hasSkill]-> (s) 
                     RETURN *
-                ''', 
+                ''',
                 skill_name=skill_name, uid=uid)
             records = list(result)
             return records
+
         def write_user_occupations(tx, occupation_uri, uid):
             result = tx.run(
                 ''' MATCH (u:User) 
@@ -831,7 +889,7 @@ class User(Resource):
                     WHERE o.OccupationUri = $occupation_uri
                     CREATE (u) -[:hasOccupation]-> (o) 
                     RETURN *
-                ''', 
+                ''',
                 occupation_uri=occupation_uri, uid=uid)
             records = list(result)
             return records
@@ -839,12 +897,14 @@ class User(Resource):
         db.execute_write(delete_old_user, uid=uid)
         db.execute_write(create_user, uid=uid, name=name)
         db.execute_write(write_user_occupation, uri=uri, uid=uid)
-        [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid) for skill_name in competencies]
+        [db.execute_write(write_user_competencies, skill_name=skill_name, uid=uid)
+         for skill_name in competencies]
         if existing_occupations:
-            [db.execute_write(write_user_occupations, occupation_uri=occupation_uri, uid=uid) for occupation_uri in existing_occupations]
+            [db.execute_write(write_user_occupations, occupation_uri=occupation_uri, uid=uid)
+             for occupation_uri in existing_occupations]
         return {
-                "username": name,
-                "userUID": uid
+            "username": name,
+            "userUID": uid
         }
 
 
@@ -881,13 +941,12 @@ class Europass(Resource):
                     }
                 }
             }
-        }      
-        
+        }
+
     })
     def get(self):
         europass_url = request.args.getlist('europassURL')[0]
         print(europass_url)
-    
 
         if europass_url.endswith("html"):
             print("Converting to JSON...")
@@ -912,17 +971,18 @@ class Europass(Resource):
                     occupation = experience["occupation"]["uri"]
                     occupation_uri = str(occupation)
                     occupation_uri_lst = [str(occupation)]
-                
-                occs.append(occupation_uri) if not occupation_uri == "None" else None
+
+                occs.append(
+                    occupation_uri) if not occupation_uri == "None" else None
 
                 def get_essential_skills(tx):
-                            return list(tx.run(
-                            '''
+                    return list(tx.run(
+                        '''
                             MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                            WHERE o.OccupationUri in ["''' + ','.join(occupation_uri_lst) +  '''"] AND r.type='essential'
+                            WHERE o.OccupationUri in ["''' + ','.join(occupation_uri_lst) + '''"] AND r.type='essential'
                             RETURN s
                             '''
-                        ))
+                    ))
 
                 db = get_db()
                 essentials = db.execute_read(get_essential_skills)
@@ -937,10 +997,11 @@ class Europass(Resource):
                     preferred_labels.append(c["preferred_label"])
 
         return {
-                "occupations": occs,
-                "preferred_labels": preferred_labels
-                }
-    
+            "occupations": occs,
+            "preferred_labels": preferred_labels
+        }
+
+
 class UserID(Resource):
 
     def get(self):
@@ -950,8 +1011,10 @@ class UserID(Resource):
             "userID": user_id
         }
 
+
 def flatten(l):
     return [item for sublist in l for item in sublist]
+
 
 api.add_resource(CourseList, '/')
 api.add_resource(Courses, '/courses')

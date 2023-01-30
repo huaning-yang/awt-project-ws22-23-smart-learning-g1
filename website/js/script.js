@@ -71,10 +71,29 @@ const copyUserID = async () => {
 function filterCourses() {
   const selected = document.querySelectorAll("#searchbar option:checked");
   const values = Array.from(selected).map((el) => el.value);
+  var location_selector = document.querySelector("#location-select");
+  const course_location =
+    location_selector.options[location_selector.selectedIndex].value;
+
+  // const course_date = document.querySelector("#date-select");
+  // if (course_date.length == 0) {
+  //   course_date = "(\\w+)";
+  // }
+  if (course_location == "none") {
+    course_location = "(\\w+)";
+  }
+
+  // params = params + "course_date=" + encodeURIComponent(course_date) + "&";
+
+  
   var params = "?";
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
+  var params = "?";
+  params =
+    params + "course_location=" + encodeURIComponent(course_location) + "&";
+
   params = params.substring(0, params.length - 1);
   // All the elements of the array the array
   // is being printed.
@@ -83,7 +102,6 @@ function filterCourses() {
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       data = this.responseText;
-      //   console.log(data);
       var coursesResponse = JSON.parse(data);
       console.log(coursesResponse);
       courseList = document.getElementById("courseList");
@@ -92,31 +110,38 @@ function filterCourses() {
       for (var j = 0; j < coursesResponse.length; j++) {
         var course = coursesResponse[j];
 
-		// <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
-		// 					<div class="d-flex w-100 justify-content-between">
-		// 					  <h5 class="mb-1">' . $course->course_name . '
-		// 					  </h5>
-      	// 					  <small>' . $course->course_datetime . '</small>
-		// 						</div>
-		// 						<small>' . $course->course_location . '</small>
-		// 						</a>
+        // <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
+        // 					<div class="d-flex w-100 justify-content-between">
+        // 					  <h5 class="mb-1">' . $course->course_name . '
+        // 					  </h5>
+        // 					  <small>' . $course->course_datetime . '</small>
+        // 						</div>
+        // 						<small>' . $course->course_location . '</small>
+        // 						</a>
 
         var courseItem = document.createElement("a");
-        courseItem.classList.add("course","list-group-item","list-group-item-action","flex-column","align-items-start");
+        courseItem.classList.add(
+          "course",
+          "list-group-item",
+          "list-group-item-action",
+          "flex-column",
+          "align-items-start"
+        );
         courseItem.setAttribute("data-uuid", course.course_id);
-		divItem = document.createElement("div");
-		divItem.classList.add("d-flex","w-100","justify-content-between");
-		h5Item = document.createElement("h5");
-		h5Item.classList.add("mb-1");
-		h5Item.innerHTML = course.course_name;
-		smallItem = document.createElement("small");
-		smallItem.innerHTML = course.course_datetime;
-		divItem.appendChild(h5Item);
-		divItem.appendChild(smallItem);
-		courseItem.appendChild(divItem);
-		smallItem = document.createElement("small");
-		smallItem.innerHTML = course.course_location;
-		courseItem.appendChild(smallItem);
+        divItem = document.createElement("div");
+        divItem.classList.add("d-flex", "w-100", "justify-content-between");
+        h5Item = document.createElement("h5");
+        h5Item.classList.add("mb-1");
+        h5Item.innerHTML = course.course_name;
+        smallItem = document.createElement("small");
+        smallItem.innerHTML = course.course_datetime;
+        divItem.appendChild(h5Item);
+        divItem.appendChild(smallItem);
+
+        courseItem.appendChild(divItem);
+        smallItem = document.createElement("small");
+        smallItem.innerHTML = course.course_location;
+        courseItem.appendChild(smallItem);
         courseList.appendChild(courseItem);
       }
     }
