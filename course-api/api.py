@@ -137,11 +137,12 @@ class Courses(Resource):
     })
     def get(self):
         skills = request.args.getlist('skill_uid')
+        print('''"''' + ''.join(skills) +  '''"''')
         def get_filtered_courses(tx):
             return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in ["''' + ','.join(skills) +  '''"]
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
                 RETURN course
                 '''
             ))
@@ -375,7 +376,7 @@ class Skills(Resource):
             return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
-                WHERE course.course_id in ["''' + ','.join(courses) +  '''"]
+                WHERE course.course_id in [''' + ','.join(f'"{course}"' for course in courses) +  ''']
                 RETURN skill_name
                 '''
             ))
@@ -588,6 +589,175 @@ class OccupationRelatedSkills(Resource):
             labels.append(sk[0])
         return labels
 
+class RecommenderRankingSkills(Resource):
+    @swagger.doc({
+        'tags': ['recommender'],
+        'description': 'Returns an ordered list of courses based on the skills, location and time',
+        'parameters': [
+            {
+                'name': 'skill_uid',
+                'description': 'One or more skills to filter on',
+                'in': 'query',
+                'type': 'array',
+                'items':
+                {
+                    'type': 'string'
+                },
+                'collectionFormat': 'multi'
+            },
+            {
+                'name': 'occupationUri',
+                'description': 'One occupation uri',
+                'in': 'query',
+                'type': 'string'
+            },
+            {
+                'name': 'location',
+                'description': 'Location of the course',
+                'in': 'query',
+                'type': 'string'
+            },
+            {
+                'name': 'time',
+                'description': 'Enddate of the course',
+                'in': 'query',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'List of course recommendations',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        skills = request.args.getlist('skill_uid')
+        occupation = request.args.getlist('occupationUri')
+        location = request.args.get('location')
+        time = request.args.get('time')
+        course_id = ''
+        def get_courses(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
+                RETURN course
+                '''
+            ))
+        def get_occupation_essential(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='essential'
+                RETURN s
+                '''
+            ))
+        def get_occupation_optional(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires]->(s:Skill)
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='optional'
+                RETURN s
+                '''
+            ))
+        def get_course_skills(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(skill_name:Skill)
+                WHERE course.course_id=$course_id
+                RETURN skill_name
+                ''',course_id=course_id
+            ))
+        def get_course_location(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)
+                WHERE course.course_id=$course_id
+                RETURN course.course_location
+                ''',course_id=course_id
+            ))
+        def get_course_time(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)
+                WHERE course.course_id=$course_id
+                RETURN course.course_time
+                ''',course_id=course_id
+            ))
+        def get_courses_with_time(tx):
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND toString(course.course_datetime) < $time
+                RETURN course
+                ''',time=time
+            ))
+        def get_courses_with_location(tx):
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location
+                RETURN course
+                ''',location=location
+            ))
+        def get_courses_with_location_time(tx):
+            return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location AND toString(course.course_datetime) < $time
+                RETURN course
+                ''',location=location,time=time
+            ))
+        def compute_score(essentials, optionals, courses):
+            number_essentials = len(list(set(essentials).intersection(courses)))
+            number_optionals = len(list(set(optionals).intersection(courses)))
+            location = db.execute_read(get_course_location)
+            loc_score = 0
+            time_score = 0
+            if(location != 'No location specified'):
+                loc_score = 1
+            time = db.execute_read(get_course_time)
+            if (time != 'No dates available'):
+                time_score = 1
+            return ((4 * number_essentials) + (2 * number_optionals) + loc_score +  time_score)
+        db = get_db()
+        essentials = db.execute_read(get_occupation_essential)
+        optionals = db.execute_read(get_occupation_optional)
+        if time and location:
+            courses = db.execute_read(get_courses_with_location_time)
+        elif time and not location:
+            courses = db.execute_read(get_courses_with_time)
+        elif not time and location:
+            courses = db.execute_read(get_courses_with_location)
+        else:
+            courses = db.execute_read(get_courses)
+        essentials_uri = []
+        optionals_uri = []
+        for tmp in essentials:
+            for es in tmp:
+                essentials_uri.append(es['concept_uri'])
+        for tmp in optionals:
+            for op in tmp:
+                optionals_uri.append(op['concept_uri'])
+        searchedEssentials = list(set(skills).intersection(essentials_uri))
+        searchedOptionals = list(set(skills).intersection(optionals_uri))
+
+        courses_skills = {}
+        return_dict = {}
+        for course in courses:
+            for tmp in course:
+                course_id = tmp['course_id']
+                courses_skills[course_id] = db.execute_read(get_course_skills)
+                course_skills_uri = []
+                for tmp in courses_skills[course_id]:
+                    for test in tmp:
+                        course_skills_uri.append(test['concept_uri'])
+                return_dict[course_id] = compute_score(searchedEssentials, searchedOptionals, course_skills_uri)
+        return sorted(return_dict, key=return_dict.get, reverse=True)[:10]
 
 class MissingEssential(Resource):
     @swagger.doc({
@@ -627,7 +797,7 @@ class MissingEssential(Resource):
             return list(tx.run(
                 '''
                 MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type="essential"
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"]
                 RETURN s
                 '''
             ))
@@ -959,6 +1129,7 @@ api.add_resource(SkillList, '/skills')
 api.add_resource(SkillListFilterable, '/skillsFilterable')
 api.add_resource(Skills, '/filterSkills')
 api.add_resource(SkillLabel, '/label')
+api.add_resource(RecommenderRankingSkills, '/rankingSkills')
 api.add_resource(MissingEssential, '/essentials')
 api.add_resource(OccupationList, '/occupations')
 api.add_resource(OccupationURI, '/occupationsuri')
