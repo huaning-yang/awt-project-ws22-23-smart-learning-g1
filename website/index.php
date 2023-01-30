@@ -78,19 +78,8 @@
 				?>
 			</select>
 			<div class="row" id="existing-competencies">
-				<label for="existing-competencies-select">Existing Competencies</label><br>
-
-				<select multiple id="existing-competencies-select">
-					<?php
-					$json = file_get_contents('http://course-api-service/skills');
-					$obj = json_decode($json);
-					$skills = $obj;
-					foreach ($skills as $skill) {
-						echo "<option class='existing-skill' value='$skill->preferred_label'>$skill->preferred_label</option>";
-					}
-
-					?>
-				</select>
+				<label for="existing-competencies-select">Existing Competencies</label>
+				<br>
 
 				<div id="exist" class="scrollable">
 					<form id="existing-comp"> </form>

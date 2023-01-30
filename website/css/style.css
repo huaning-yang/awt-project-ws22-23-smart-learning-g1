@@ -30,8 +30,7 @@ input[type=text]:focus {
 	}
 
 .scrollable { 
-	border:2px solid #ccc; 
-	width:300px; 
+	border:2px solid #ccc;  
 	height:300px; 
 	overflow-y: scroll; 
 	min-height: 100px;
