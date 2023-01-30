@@ -178,6 +178,9 @@ function getOccupation() {
 }
 
 function commitUserToDatabase() {
+
+  saveCompetenices();
+
   let xhr = new XMLHttpRequest();
   xhr.open("POST", "http://localhost:5001/users");
   xhr.setRequestHeader("Accept", "application/json");

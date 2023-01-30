@@ -85,7 +85,7 @@
 					<form id="existing-comp"> </form>
 
 				</div>
-				<input type="button" value="Save" onclick=saveCompetenices();>
+					<input type="button" value="Commit" onclick=commitUserToDatabase();>
 				<div display="flex" flex-direction="column" justify-content="flex-start">
 					<input id="userID" class="form-control" type="text" name="restoreEuropassText" placeholder="UserID">
 					<button id="restoreEuropassBtn" type="button" onclick=restoreUser()> Restore User </button>
@@ -99,9 +99,6 @@
 				</div>
 				<div id="europassContainer" class="europass">
 					<ul id="europassList"> </ul>
-				</div>
-				<div class="container">
-					<input type="button" value="Commit" onclick=commitUserToDatabase();>
 				</div>
 			</div>
 		</div>
