@@ -712,18 +712,30 @@ class RecommenderRankingSkills(Resource):
                 RETURN course
                 ''',location=location,time=time
             ))
+        def get_course_from_uri(tx):
+            return list(tx.run(
+                '''
+                MATCH (c:Course)
+                WHERE c.course_id=$course_id
+                RETURN c
+                ''', course_id=course_id
+            ))
         def compute_score(essentials, optionals, courses):
             number_essentials = len(list(set(essentials).intersection(courses)))
             number_optionals = len(list(set(optionals).intersection(courses)))
-            location = db.execute_read(get_course_location)
+            number_irrelevant = len(courses) - len(skills)
+
             loc_score = 0
             time_score = 0
+            if(number_essentials + number_optionals == 0):
+                return 0
+            location = db.execute_read(get_course_location)
             if(location != 'No location specified'):
                 loc_score = 1
             time = db.execute_read(get_course_time)
             if (time != 'No dates available'):
                 time_score = 1
-            return ((4 * number_essentials) + (2 * number_optionals) + loc_score +  time_score)
+            return ((4 * number_essentials) + (2 * number_optionals) + loc_score +  time_score + (0.3 * number_irrelevant)) 
         db = get_db()
         essentials = db.execute_read(get_occupation_essential)
         optionals = db.execute_read(get_occupation_optional)
@@ -757,7 +769,13 @@ class RecommenderRankingSkills(Resource):
                     for test in tmp:
                         course_skills_uri.append(test['concept_uri'])
                 return_dict[course_id] = compute_score(searchedEssentials, searchedOptionals, course_skills_uri)
-        return sorted(return_dict, key=return_dict.get, reverse=True)[:10]
+        return_dict = {key:val for key,val in return_dict.items() if val != 0 and key != 'status'}
+        sort = sorted(return_dict, key=return_dict.get, reverse=True)[:10]
+        course_list = []
+        for uri in sort:
+            course_id = uri
+            course_list.append(db.execute_read(get_course_from_uri)[0][0])
+        return course_list
 
 class MissingEssential(Resource):
     @swagger.doc({
