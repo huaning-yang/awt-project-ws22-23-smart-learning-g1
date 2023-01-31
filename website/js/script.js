@@ -79,9 +79,9 @@ function filterCourses() {
   // if (course_date.length == 0) {
   //   course_date = "(\\w+)";
   // }
-  if (course_location == "none") {
-    course_location = "(\\w+)";
-  }
+  // if (course_location == "none") {
+  //   course_location = "(\\w+)";
+  // }
 
   // params = params + "course_date=" + encodeURIComponent(course_date) + "&";
 
@@ -90,9 +90,9 @@ function filterCourses() {
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
-  var params = "?";
-  params =
-    params + "course_location=" + encodeURIComponent(course_location) + "&";
+  // var params = "?";
+  // params =
+  //   params + "course_location=" + encodeURIComponent(course_location) + "&";
 
   params = params.substring(0, params.length - 1);
   // All the elements of the array the array

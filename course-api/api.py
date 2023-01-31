@@ -129,14 +129,15 @@ class Courses(Resource):
                     'type': 'string'
                 },
                 'collectionFormat': 'multi'
-            },
-            {
-                'name': 'course_location',
-                'in': 'formData',
-                'required': True,
-                'description': 'Location of the course',
-                'type': 'string'
             }
+            # ,
+            # {
+            #     'name': 'course_location',
+            #     'in': 'formData',
+            #     'required': True,
+            #     'description': 'Location of the course',
+            #     'type': 'string'
+            # }
             # {
             #     'name': 'course_date',
             #     'in': 'formData',
@@ -164,7 +165,7 @@ class Courses(Resource):
             return list(tx.run(
                 f'''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.course_location=~{location} and s.concept_uri in ["''' + ','.join(skills) + '''"]
+                WHERE s.course_location="Potsdam" and s.concept_uri in ["''' + ','.join(skills) + '''"]
                 RETURN course
                 '''
             ))
