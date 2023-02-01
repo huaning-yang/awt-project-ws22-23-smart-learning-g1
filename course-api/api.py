@@ -39,8 +39,7 @@ def output_json(data, code, headers=None):
 
 
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
-driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io",
-                              auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
+driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
 
 
 def get_db():
@@ -156,22 +155,20 @@ class Courses(Resource):
         }
     })
     def get(self):
-        skills = request.args.getlist('skill_uid')
-        location = request.args.get("course_location")
+        skills = request.args.getlist('skill_uri')
+        location = request.args.get('course_location')
         # date = request.args.get("course_date")
-
-        def get_filtered_courses(tx):
+        
+        def get_filtered_courses(tx, location):
             return list(tx.run(
-                f'''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.course_location=~{location} and s.concept_uri in ["''' + ','.join(skills) + '''"]
-                RETURN course
-                '''
-            ))
+            '''
+            MATCH (c:Course)-[:PROVIDE_SKILL]->(s:Skill)
+            WHERE c.course_location=$location and s.concept_uri in ["''' + ','.join(skills) + '''"]
+            RETURN c as courses
+            ''', location=location))
         db = get_db()
-        result = db.execute_read(get_filtered_courses)
-        return [serialize_course(record['course']) for record in result]
-
+        result = db.execute_read(get_filtered_courses, location=location)
+        return [serialize_course(record['courses']) for record in result]
 
 class LocationList(Resource):
     @swagger.doc({
