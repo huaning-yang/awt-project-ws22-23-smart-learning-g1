@@ -128,7 +128,8 @@ class Courses(Resource):
                     'type': 'string'
                 },
                 'collectionFormat': 'multi'
-            },
+            }
+            ,
             {
                 'name': 'course_location',
                 'in': 'formData',
