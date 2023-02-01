@@ -90,9 +90,11 @@ function filterCourses() {
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
-  // var params = "?";
-  // params =
-  //   params + "course_location=" + encodeURIComponent(course_location) + "&";
+  params = params + "skill_uid=" + encodeURIComponent("http://data.europa.eu/esco/skill/0005c151-5b5a-4a66-8aac-60e734beb1ab") + "&";
+  
+  var params = "?";
+  params =
+    params + "course_location=" + encodeURIComponent("Potsdam") + "&";
 
   params = params.substring(0, params.length - 1);
   // All the elements of the array the array
@@ -103,13 +105,13 @@ function filterCourses() {
     if (this.readyState == 4 && this.status == 200) {
       data = this.responseText;
       var coursesResponse = JSON.parse(data);
+      document.write(course_location);
       console.log(coursesResponse);
       courseList = document.getElementById("courseList");
       courseList.replaceChildren();
 
       for (var j = 0; j < coursesResponse.length; j++) {
         var course = coursesResponse[j];
-
         // <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
         // 					<div class="d-flex w-100 justify-content-between">
         // 					  <h5 class="mb-1">' . $course->course_name . '
@@ -137,10 +139,14 @@ function filterCourses() {
         smallItem.innerHTML = course.course_datetime;
         divItem.appendChild(h5Item);
         divItem.appendChild(smallItem);
-
+          
         courseItem.appendChild(divItem);
         smallItem = document.createElement("small");
-        smallItem.innerHTML = course.course_location;
+        // smallItem.innerHTML = course_location;
+        // document.write(course_location)
+        // courseItem.appendChild(smallItem);
+        // courseList.appendChild(courseItem);
+        smallItem.innerHTML = "Bembereke";
         courseItem.appendChild(smallItem);
         courseList.appendChild(courseItem);
       }

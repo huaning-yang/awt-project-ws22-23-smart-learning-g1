@@ -130,14 +130,14 @@ class Courses(Resource):
                 },
                 'collectionFormat': 'multi'
             }
-            # ,
-            # {
-            #     'name': 'course_location',
-            #     'in': 'formData',
-            #     'required': True,
-            #     'description': 'Location of the course',
-            #     'type': 'string'
-            # }
+            ,
+            {
+                'name': 'course_location',
+                'in': 'formData',
+                'required': True,
+                'description': 'Location of the course',
+                'type': 'string'
+            }
             # {
             #     'name': 'course_date',
             #     'in': 'formData',
@@ -158,19 +158,20 @@ class Courses(Resource):
     })
     def get(self):
         skills = request.args.getlist('skill_uid')
-        location = request.args.get("course_location")
+        # _course_location = request.args.get("course_location")
+        _course_location = "Potsdam"
         # date = request.args.get("course_date")
 
-        def get_filtered_courses(tx):
+        def get_filtered_courses(tx, get_course_location):
             return list(tx.run(
-                f'''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.course_location="Potsdam" and s.concept_uri in ["''' + ','.join(skills) + '''"]
-                RETURN course
                 '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE course.course_location=$get_course_location and s.concept_uri in ["''' + ','.join(skills) + '''"]
+                RETURN course
+                ''', get_course_location=get_course_location
             ))
         db = get_db()
-        result = db.execute_read(get_filtered_courses)
+        result = db.execute_read(get_filtered_courses, get_course_location=_course_location)
         return [serialize_course(record['course']) for record in result]
 
 
