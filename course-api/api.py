@@ -685,14 +685,14 @@ class RecommenderRankingSkills(Resource):
                 '''
                 MATCH (course:Course)
                 WHERE course.course_id=$course_id
-                RETURN course.course_time
+                RETURN course.course_datetime
                 ''',course_id=course_id
             ))
         def get_courses_with_time(tx):
                 return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND toString(course.course_datetime) < $time
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
                 RETURN course
                 ''',time=time
             ))
@@ -708,7 +708,7 @@ class RecommenderRankingSkills(Resource):
             return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location AND toString(course.course_datetime) < $time
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
                 RETURN course
                 ''',location=location,time=time
             ))
@@ -774,7 +774,8 @@ class RecommenderRankingSkills(Resource):
         course_list = []
         for uri in sort:
             course_id = uri
-            course_list.append(db.execute_read(get_course_from_uri)[0][0])
+            course_object = serialize_course(db.execute_read(get_course_from_uri)[0][0])
+            course_list.append(course_object)
         return course_list
 
 class MissingEssential(Resource):

@@ -28,7 +28,6 @@ function difference(setA, setB) {
 window.onload = function () {
   localStorage.setItem("hasCodeRunBefore", true);
   curr_occupation = "none";
-
   let xhr = new XMLHttpRequest();
   xhr.open("GET", "http://localhost:5001/userid", true);
   xhr.setRequestHeader("Accept", "application/json");
@@ -70,12 +69,27 @@ const copyUserID = async () => {
 
 function filterCourses() {
   const selected = document.querySelectorAll("#searchbar option:checked");
+  const selectedOccupation = document.getElementById("occupation-select").value;
   const values = Array.from(selected).map((el) => el.value);
+  const date = document.getElementById('date-select').value + "T00:00:00";
+  const location = document.getElementById('location-select').value;
+
+  console.log(values);
+  console.log(date);
+  console.log(selectedOccupation);
+  console.log(location);
   var params = "?";
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
-  params = params.substring(0, params.length - 1);
+  params = params + "occupationUri=" + encodeURIComponent(selectedOccupation);
+  if (location !== "none") {
+    params = params + "&" + "location=" + encodeURIComponent(location);
+  }
+  if (date !== "T00:00:00") {
+    params = params + "&" + "time=" + encodeURIComponent(date);
+  }
+  console.log("http://localhost:5001/rankingSkills" + params)
   // All the elements of the array the array
   // is being printed.
   var xhttp = new XMLHttpRequest();
@@ -91,37 +105,37 @@ function filterCourses() {
 
       for (var j = 0; j < coursesResponse.length; j++) {
         var course = coursesResponse[j];
-
-		// <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
-		// 					<div class="d-flex w-100 justify-content-between">
-		// 					  <h5 class="mb-1">' . $course->course_name . '
-		// 					  </h5>
-      	// 					  <small>' . $course->course_datetime . '</small>
-		// 						</div>
-		// 						<small>' . $course->course_location . '</small>
-		// 						</a>
+        // <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
+        // 					<div class="d-flex w-100 justify-content-between">
+        // 					  <h5 class="mb-1">' . $course->course_name . '
+        // 					  </h5>
+        // 					  <small>' . $course->course_datetime . '</small>
+        // 						</div>
+        // 						<small>' . $course->course_location . '</small>
+        // 						</a>
 
         var courseItem = document.createElement("a");
-        courseItem.classList.add("course","list-group-item","list-group-item-action","flex-column","align-items-start");
+        courseItem.classList.add("course", "list-group-item", "list-group-item-action", "flex-column", "align-items-start");
         courseItem.setAttribute("data-uuid", course.course_id);
-		divItem = document.createElement("div");
-		divItem.classList.add("d-flex","w-100","justify-content-between");
-		h5Item = document.createElement("h5");
-		h5Item.classList.add("mb-1");
-		h5Item.innerHTML = course.course_name;
-		smallItem = document.createElement("small");
-		smallItem.innerHTML = course.course_datetime;
-		divItem.appendChild(h5Item);
-		divItem.appendChild(smallItem);
-		courseItem.appendChild(divItem);
-		smallItem = document.createElement("small");
-		smallItem.innerHTML = course.course_location;
-		courseItem.appendChild(smallItem);
+        divItem = document.createElement("div");
+        divItem.classList.add("d-flex", "w-100", "justify-content-between");
+        h5Item = document.createElement("h5");
+        h5Item.classList.add("mb-1");
+        h5Item.innerHTML = course.course_name;
+        smallItem = document.createElement("small");
+        smallItem.innerHTML = course.course_datetime;
+        divItem.appendChild(h5Item);
+        divItem.appendChild(smallItem);
+        courseItem.appendChild(divItem);
+        smallItem = document.createElement("small");
+        smallItem.innerHTML = course.course_location;
+        courseItem.appendChild(smallItem);
         courseList.appendChild(courseItem);
       }
     }
   };
-  xhttp.open("GET", "http://localhost:5001/courses" + params, true);
+
+  xhttp.open("GET", "http://localhost:5001/rankingSkills" + params, true);
   xhttp.setRequestHeader("Content-type", "application/json");
   xhttp.send(null);
 }
@@ -165,7 +179,7 @@ function getOccupation() {
     xhr.open(
       "get",
       "http://localhost:5001/occupationsuri?occupation=" +
-        encodeURIComponent(occupation),
+      encodeURIComponent(occupation),
       true
     );
     xhr.setRequestHeader("Content-type", "application/json");
@@ -244,7 +258,7 @@ function updateExistingCompetencies() {
   xhr.open(
     "GET",
     "http://localhost:5001/occupationessential?occupationUri=" +
-      encodeURIComponent(param),
+    encodeURIComponent(param),
     true
   );
   xhr.setRequestHeader("Content-type", "application/json");
@@ -274,7 +288,7 @@ function getRelatedSkills() {
   xhr.open(
     "GET",
     "http://localhost:5001/occupationrelated?occupationUri=" +
-      encodeURIComponent(param),
+    encodeURIComponent(param),
     true
   );
   xhr.setRequestHeader("Content-type", "application/json");
@@ -307,7 +321,7 @@ function getUnobtainableSkills() {
   xhr.open(
     "GET",
     "http://localhost:5001/occupationunobtainable?occupationUri=" +
-      encodeURIComponent(param),
+    encodeURIComponent(param),
     true
   );
   xhr.setRequestHeader("Content-type", "application/json");
@@ -343,9 +357,9 @@ function recommendCourses() {
   xhr.open(
     "GET",
     "http://localhost:5001/essentials?occupationUri=" +
-      encodeURIComponent(param) +
-      "&personID=" +
-      userID,
+    encodeURIComponent(param) +
+    "&personID=" +
+    userID,
     true
   );
   xhr.setRequestHeader("Content-type", "application/json");
@@ -388,6 +402,7 @@ function storeEuropassSkills() {
     alert("Europass-URL is empty!");
   }
 }
+
 function restoreUser() {
   userID = document.getElementById("userID").value;
   let xhr = new XMLHttpRequest();
@@ -440,6 +455,7 @@ function checkCheckboxes() {
     }
   }
 }
+
 function selectOccupation(valueToSelect) {
   let element = document.getElementById("occupation-select");
   element.value = valueToSelect;
