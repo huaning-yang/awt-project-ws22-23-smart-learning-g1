@@ -589,6 +589,74 @@ class OccupationRelatedSkills(Resource):
             labels.append(sk[0])
         return labels
 
+class RecommendBasedOnSkillset(Resource):
+    @swagger.doc({
+        'tags': ['recommender'],
+        'description': 'Returns list of skills based on which occupation is easiest to archieve',
+        'parameters': [
+            {
+                'name': 'user_uid',
+                'description': 'Skillset of a user',
+                'in': 'query',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'list of skills that could help achieve occupations',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        user_uid = request.args.get('user_uid')
+        occupation_uri = ''
+        def get_occupations_based_on_skill(tx):
+            return list(tx.run(
+                '''
+                MATCH (n:User)-[r:hasSkill]->(s:Skill) 
+                WHERE n.uid=$user_uid WITH collect(s) as skills 
+                UNWIND skills as m 
+                MATCH(o:Occupation)-[r2:requires{type:'essential'}]->(m:Skill) 
+                return o,  count(m) as freq ORDER by freq DESC LIMIT 3
+                ''', user_uid=user_uid
+            ))
+        def get_occupation_essential(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires {type: 'essential'}]->(s:Skill)
+                WHERE o.OccupationUri=$occupation_uri AND NOT s.concept_uri in [''' + ','.join(f'"{skill}"' for skill in skillset_uri) +  ''']
+                RETURN s
+                ''', occupation_uri=occupation_uri
+            ))
+        def get_user_skills(tx):
+            return list(tx.run(
+                '''
+                MATCH (u:User)-[r:hasSkill]->(s:Skill)
+                WHERE u.uid=$user_uid
+                RETURN s
+                ''', user_uid=user_uid
+            ))
+        db = get_db()
+        skillset = flatten(db.execute_read(get_user_skills))
+        skillset_uri = []
+        for sk in skillset:
+            uri = sk['concept_uri']
+            skillset_uri.append(uri)
+        occupations = (db.execute_read(get_occupations_based_on_skill))
+        skills = []
+        for oc in occupations:
+            occupation_uri = oc[0]['OccupationUri']
+            occ_skills = flatten(db.execute_read(get_occupation_essential))
+            for sk in occ_skills:
+                serialized = serialize_skill(sk)
+                if serialized not in skills:
+                    skills.append(serialized)
+        return skills
+
 class RecommenderRankingSkills(Resource):
     @swagger.doc({
         'tags': ['recommender'],
@@ -1155,6 +1223,7 @@ api.add_resource(OccupationURI, '/occupationsuri')
 api.add_resource(OccupationUnobtainableSkills, '/occupationunobtainable')
 api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
+api.add_resource(RecommendBasedOnSkillset, '/recommendSkillset')
 api.add_resource(OccupationRelatedSkills, '/occupationrelated')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')
 api.add_resource(User, '/users')

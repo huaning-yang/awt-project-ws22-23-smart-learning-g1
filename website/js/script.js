@@ -498,3 +498,33 @@ function SelectRecommendation() {
   var newOption = new Option(selected[0].text, selected[0].value, false, true);
   $("#searchbar").append(newOption).trigger("change");
 }
+
+function getRelatedSkillsUser() {
+  userID = document.getElementById("userID").value;
+  const recommenderBox = document.getElementById("recommendation-items");
+  var xhr = new XMLHttpRequest();
+  var data;
+  xhr.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      data = this.responseText;
+      console.log(data)
+      var response = JSON.parse(data);
+      var i,
+        L = recommenderBox.options.length - 1;
+      for (i = L; i >= 0; i--) {
+        recommenderBox.remove(i);
+      }
+      for (var sk of response) {
+        recommenderBox.options[recommenderBox.options.length] = new Option(sk['preferred_label']);
+      }
+    }
+  };
+  xhr.open(
+    "GET",
+    "http://localhost:5001/recommendSkillset?user_uid=" +
+    encodeURIComponent(userID),
+    true
+  );
+  xhr.setRequestHeader("Content-type", "application/json");
+  xhr.send();
+}
