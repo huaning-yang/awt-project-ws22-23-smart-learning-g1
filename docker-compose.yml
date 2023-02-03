@@ -1,8 +1,12 @@
 version: '3'  # version of compose format 
+# networks:
+#   internal:
 
 services:
   course-api-service:
     build: ./course-api  # path is relative to docker-compose.yml localtion
+    # networks:
+    #   internal:
     volumes:
       - ./course-api:/usr/src/app # mount point
     ports:
@@ -10,6 +14,8 @@ services:
 
   website:
     image: php:apache  # pulling image from DockerHub
+    # networks:
+    #   internal:
     volumes:
       - ./website:/var/www/html # mount
     ports:
@@ -17,3 +23,28 @@ services:
     depends_on:
       - course-api-service  # website is not going to work 
                              # unless course-api-service is running
+
+  neo4jdb:
+    # Docker image to be used
+    image: neo4j:latest
+
+    # The ports that will be accessible from outside the container - HTTP (7474) and Bolt (7687).
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+    volumes:
+      - ./database/conf:/var/lib/neo4j/conf
+      - ./database/data:/var/lib/neo4j/data
+      - ./database/logs:/var/lib/neo4j/logs
+      - ./database/import:/var/lib/neo4j/import
+      - ./database/plugins:/var/lib/neo4j/plugins
+
+    # Passes the following environment variables to the container
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4
+      - EXTENDED_CONF=yes
+      - NEO4J_EDITION=docker_compose
+      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*

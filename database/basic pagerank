@@ -1,0 +1,12 @@
+CALL gds.graph.project.cypher(
+    'full_graph',
+    'MATCH (n) RETURN id(n) AS id',
+    'MATCH (n)-[e]-(m) RETURN id(n) AS source, e.weight AS weight, id(m) AS target'
+)
+
+
+
+CALL gds.pageRank.stream('full_graph')
+            YIELD nodeId, score
+            RETURN gds.util.asNode(nodeId) AS n, score
+            ORDER BY score DESC
