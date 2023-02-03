@@ -11,6 +11,8 @@ services:
       - ./course-api:/usr/src/app # mount point
     ports:
       - 5001:80  # host:container
+    depends_on:
+      - neo4jdb
 
   website:
     image: php:apache  # pulling image from DockerHub
