@@ -10,3 +10,6 @@ CALL gds.pageRank.stream('full_graph')
             YIELD nodeId, score
             RETURN gds.util.asNode(nodeId) AS n, score
             ORDER BY score DESC
+
+
+https://github.com/blacklanternsecurity/spiderfoot-neo4j/blob/master/spiderfoot_neo4j/db.py
