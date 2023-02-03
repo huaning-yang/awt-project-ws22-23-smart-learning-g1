@@ -451,7 +451,7 @@ class OccupationEssential(Resource):
         'parameters': [
             {
             'name': 'occupationUri',
-            'description': 'One occupation (uri) for which the essential skills are needed',
+            'description': 'One occupation (uri) for which the essential skills ar e needed',
             'in': 'query',
             'type': 'string'
         }],
@@ -588,6 +588,93 @@ class OccupationRelatedSkills(Resource):
         for sk in relatedSkills:
             labels.append(sk[0])
         return labels
+
+class RecommendCoursePath(Resource):
+    @swagger.doc({
+        'tags': ['recommender'],
+        'description': 'Returns list of skills based on which occupation is easiest to archieve',
+        'parameters': [
+            {
+                'name': 'user_uid',
+                'description': 'Skillset of a user',
+                'in': 'query',
+                'type': 'string'
+            },
+            {
+                'name': 'occupation_uri',
+                'description': 'Planned occupation',
+                'in': 'query',
+                'type': 'string'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'list of courses that one can take to archieve a planned occupation',
+                'schema': {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            }
+        }
+    })
+    def get(self):
+        user_id = request.args.get('user_uid')
+        occupation = request.args.get('occupation_uri')
+        skills_uri = []
+        def get_skillset(tx):
+            return list(tx.run(
+                '''
+                MATCH (u:User)-[r:hasSkill]->(s:Skill)
+                WHERE u.uid=$user_id
+                RETURN s
+                ''', user_id=user_id
+            ))
+        def get_best_course(tx):
+            return list(tx.run(
+                '''
+                MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
+                WHERE NOT m.concept_uri in $skills_uri
+                AND o.OccupationUri=$occupation
+                RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 2
+                ''', skills_uri=skills_uri, occupation=occupation
+            ))
+        def get_unobtainable(tx):
+            return list(tx.run(
+                '''
+                MATCH (o1:Occupation)-[r1:requires {type: 'essential'}]->(s1:Skill) 
+                WHERE o1.OccupationUri=$occupation
+                AND NOT ()-[:PROVIDE_SKILL]->(s1) 
+                RETURN s1
+                ''', occupation=occupation
+            ))
+        def get_occupation_essential(tx):
+            return list(tx.run(
+                '''
+                MATCH (o:Occupation)-[r:requires {type: 'essential'}]->(s:Skill)
+                WHERE o.OccupationUri=$occupation
+                RETURN s
+                ''', occupation=occupation
+            ))
+
+        db = get_db()
+        skills = flatten(db.execute_read(get_skillset))
+        unobtainable_skills = flatten(db.execute_read(get_unobtainable))
+        essentials = flatten(db.execute_read(get_occupation_essential))
+        essentials_uri = []
+        for sk in essentials:
+            essentials_uri.append(sk['concept_uri'])
+        for sk in skills:
+            skills_uri.append(sk['concept_uri'])
+        for sk in unobtainable_skills:
+            skills_uri.append(sk['concept_uri'])
+        path = []
+        while(not all(item in skills_uri for item in essentials_uri)):
+            course = flatten(db.execute_read(get_best_course))
+            path.append(serialize_course(course[0]))
+            path.append(course[1])
+            for sk in course[1]:
+                skills_uri.append(sk)
+        return path
 
 class RecommendBasedOnSkillset(Resource):
     @swagger.doc({
@@ -862,7 +949,7 @@ class MissingEssential(Resource):
             'collectionFormat': 'multi'
         },
         {
-            'name': 'personID',
+            'name': 'user_id',
             'description': 'Identifier of a person',
             'in': 'query',
             'type': 'integer'
@@ -879,38 +966,42 @@ class MissingEssential(Resource):
     })
     def get(self):
         occupation = request.args.getlist('occupationUri')
-        personID = request.args.get('personID')
+        user_uid = request.args.get('user_id')
         def get_essentialSkills(tx):
             return list(tx.run(
                 '''
                 MATCH (o:Occupation)-[r:requires]->(s:Skill)
-                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"]
+                WHERE o.OccupationUri in ["''' + ','.join(occupation) +  '''"] AND r.type='essential'
                 RETURN s
                 '''
             ))
         def get_personSkills(tx):
-            query = f'''
-                 MATCH (u:User)-[r:hasSkill]->(s:Skill) WHERE u.uid = "''' + personID + '''" RETURN s
-            '''
-            return list(tx.run(query))
+            return list(tx.run(
+                '''
+                MATCH (u:User)-[r:hasSkill]->(s:Skill) 
+                WHERE u.uid=$user_uid
+                RETURN s
+                ''', user_uid=user_uid
+            ))
         def get_differences(essential, person):
             return [x for x in essential if x not in person]
         db = get_db()
         essentials = db.execute_read(get_essentialSkills)
-        skills = set(db.execute_read(get_personSkills))
-
+        skills = db.execute_read(get_personSkills)
+        
         essentialSkills_uri = []
         for essential in essentials:
             for skill_name in essential:
                 essentialSkills_uri.append(skill_name['concept_uri'])
                 
-
         person = []
         for sk in skills:
             for s in sk:
                 person.append(s['concept_uri'])
-
-        missing = get_differences(essentialSkills_uri,person)
+        if(skills != []):
+            missing = get_differences(essentialSkills_uri,person)
+        else:
+            missing = essentialSkills_uri
         returnSkill = []
         for skill_name in missing:
             for essential in essentials:
@@ -1223,6 +1314,7 @@ api.add_resource(OccupationURI, '/occupationsuri')
 api.add_resource(OccupationUnobtainableSkills, '/occupationunobtainable')
 api.add_resource(OccupationEssential, '/occupationessential')
 api.add_resource(OccupationOptional, '/occupationoptional')
+api.add_resource(RecommendCoursePath, '/coursePath')
 api.add_resource(RecommendBasedOnSkillset, '/recommendSkillset')
 api.add_resource(OccupationRelatedSkills, '/occupationrelated')
 api.add_resource(ApiDocs, '/docs', '/docs/<path:path>')

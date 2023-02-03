@@ -358,8 +358,8 @@ function recommendCourses() {
     "GET",
     "http://localhost:5001/essentials?occupationUri=" +
     encodeURIComponent(param) +
-    "&personID=" +
-    userID,
+    "&user_id=" +
+    encodeURIComponent(userID),
     true
   );
   xhr.setRequestHeader("Content-type", "application/json");
