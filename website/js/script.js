@@ -85,14 +85,13 @@ function filterCourses() {
 
   // params = params + "course_date=" + encodeURIComponent(course_date) + "&";
 
-  
   var params = "?";
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
   }
   params = params + "skill_uid=" + encodeURIComponent("http://data.europa.eu/esco/skill/0005c151-5b5a-4a66-8aac-60e734beb1ab") + "&";
   
-  var params = "?";
+  // var params = "?";
   params =
     params + "course_location=" + encodeURIComponent("Potsdam") + "&";
 
@@ -105,11 +104,9 @@ function filterCourses() {
     if (this.readyState == 4 && this.status == 200) {
       data = this.responseText;
       var coursesResponse = JSON.parse(data);
-      document.write(course_location);
       console.log(coursesResponse);
       courseList = document.getElementById("courseList");
       courseList.replaceChildren();
-
       for (var j = 0; j < coursesResponse.length; j++) {
         var course = coursesResponse[j];
         // <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
@@ -143,7 +140,6 @@ function filterCourses() {
         courseItem.appendChild(divItem);
         smallItem = document.createElement("small");
         // smallItem.innerHTML = course_location;
-        // document.write(course_location)
         // courseItem.appendChild(smallItem);
         // courseList.appendChild(courseItem);
         smallItem.innerHTML = "Bembereke";
