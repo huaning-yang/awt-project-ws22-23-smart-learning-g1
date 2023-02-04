@@ -48,5 +48,5 @@ services:
       - NEO4J_AUTH=neo4j/6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4
       - EXTENDED_CONF=yes
       - NEO4J_EDITION=docker_compose
-      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
+      - 'NEO4J_PLUGINS=[ \"apoc\", \"graph-data-science\"]'
       - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
