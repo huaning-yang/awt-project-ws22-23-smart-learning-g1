@@ -8,6 +8,7 @@ from flask.json import JSONEncoder
 from flask_cors import CORS #added to top of file
 from flask_restful_swagger_2 import Api, swagger, Schema
 from flask_json import FlaskJSON, json_response
+import copy
 import sqlite3
 import datetime
 import json
@@ -621,7 +622,7 @@ class RecommendCoursePath(Resource):
     def get(self):
         user_id = request.args.get('user_uid')
         occupation = request.args.get('occupation_uri')
-        skills_uri = []
+        path, skills_uri, essentials_uri = [], [], []
         def get_skillset(tx):
             return list(tx.run(
                 '''
@@ -636,7 +637,7 @@ class RecommendCoursePath(Resource):
                 MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
                 WHERE NOT m.concept_uri in $skills_uri
                 AND o.OccupationUri=$occupation
-                RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 2
+                RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
                 ''', skills_uri=skills_uri, occupation=occupation
             ))
         def get_unobtainable(tx):
@@ -661,20 +662,44 @@ class RecommendCoursePath(Resource):
         skills = flatten(db.execute_read(get_skillset))
         unobtainable_skills = flatten(db.execute_read(get_unobtainable))
         essentials = flatten(db.execute_read(get_occupation_essential))
-        essentials_uri = []
+        
         for sk in essentials:
             essentials_uri.append(sk['concept_uri'])
         for sk in skills:
             skills_uri.append(sk['concept_uri'])
         for sk in unobtainable_skills:
             skills_uri.append(sk['concept_uri'])
-        path = []
-        while(not all(item in skills_uri for item in essentials_uri)):
+        
+        skillset_uris1 = copy.deepcopy(skills_uri)
+        skillset_uris2 = copy.deepcopy(skills_uri)
+        path1, path2 = [], []
+        course = flatten(db.execute_read(get_best_course))
+        path1.append(serialize_course(course[0]))
+        path1.append(course[1])
+        for sk in course[1]:
+                skillset_uris1.append(sk)
+        path2.append(serialize_course(course[3]))
+        path2.append(course[4])
+        for sk in course[1]:
+                skillset_uris2.append(sk)
+
+        while(not all(item in skillset_uris1 for item in essentials_uri)):
+            skills_uri = skillset_uris1
             course = flatten(db.execute_read(get_best_course))
-            path.append(serialize_course(course[0]))
-            path.append(course[1])
+            path1.append(serialize_course(course[0]))
+            path1.append(course[1])
             for sk in course[1]:
-                skills_uri.append(sk)
+                skillset_uris1.append(sk)
+
+        while(not all(item in skillset_uris2 for item in essentials_uri)):
+            skills_uri = skillset_uris2
+            course = flatten(db.execute_read(get_best_course))
+            path2.append(serialize_course(course[0]))
+            path2.append(course[1])
+            for sk in course[1]:
+                skillset_uris2.append(sk)
+        path.append(path1)
+        path.append(path2)
         return path
 
 class RecommendBasedOnSkillset(Resource):
@@ -879,7 +904,6 @@ class RecommenderRankingSkills(Resource):
         def compute_score(essentials, optionals, courses):
             number_essentials = len(list(set(essentials).intersection(courses)))
             number_optionals = len(list(set(optionals).intersection(courses)))
-            number_irrelevant = len(courses) - len(skills)
 
             loc_score = 0
             time_score = 0
@@ -891,7 +915,7 @@ class RecommenderRankingSkills(Resource):
             time = db.execute_read(get_course_time)
             if (time != 'No dates available'):
                 time_score = 1
-            return ((4 * number_essentials) + (2 * number_optionals) + loc_score +  time_score + (0.3 * number_irrelevant)) 
+            return ((4 * number_essentials) + (2 * number_optionals) + loc_score +  time_score) 
         db = get_db()
         essentials = db.execute_read(get_occupation_essential)
         optionals = db.execute_read(get_occupation_optional)

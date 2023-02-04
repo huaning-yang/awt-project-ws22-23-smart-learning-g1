@@ -150,6 +150,7 @@
 					<button type="button" class="btn btn-block btn-primary" onclick="recommendCourses();">Recommend</button>
 					<button type="button" class="btn btn-block btn-info" onclick="getRelatedSkills();">Related Skills (occupation)</button>
 					<button type="button" class="btn btn-block btn-info" onclick="getRelatedSkillsUser();">Related Skills (user skillset)</button>
+					<button type="button" class="btn btn-block btn-info" onclick="recommendCoursePath();">Recommend Course Path</button>
 					<button type="button" class="btn btn-block btn-danger" onclick="clearFilter();">Reset</button>
 
 				</div>

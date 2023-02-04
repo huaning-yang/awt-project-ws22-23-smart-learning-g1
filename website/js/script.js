@@ -528,3 +528,69 @@ function getRelatedSkillsUser() {
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.send();
 }
+
+function recommendCoursePath() {
+  var xhttp = new XMLHttpRequest();
+  var data;
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      data = this.responseText;
+      //   console.log(data);
+      var coursesResponse = JSON.parse(data);
+      console.log(coursesResponse);
+      courseList = document.getElementById("courseList");
+      courseList.replaceChildren();
+
+      for (var j = 0; j < coursesResponse.length; j++) {
+        var course = coursesResponse[j];
+        // <a href="#" data-UUID=' . $course->course_id . ' class="course list-group-item list-group-item-action flex-column align-items-start">
+        // 					<div class="d-flex w-100 justify-content-between">
+        // 					  <h5 class="mb-1">' . $course->course_name . '
+        // 					  </h5>
+        // 					  <small>' . $course->course_datetime . '</small>
+        // 						</div>
+        // 						<small>' . $course->course_location . '</small>
+        // 						</a>
+        let counter = 0
+        for (var i = 0; i < course.length; i = i + 2) {
+          console.log(course[i]['course_name'])
+          console.log(course[i + 1])
+          var courseItem = document.createElement("a");
+          courseItem.classList.add("course", "list-group-item", "list-group-item-action", "flex-column", "align-items-start");
+          courseItem.setAttribute("data-uuid", course[i]['course_id']);
+          divItem = document.createElement("div");
+          divItem.classList.add("d-flex", "w-100", "justify-content-between");
+          h5Item = document.createElement("h5");
+          h5Item.classList.add("mb-1");
+          h5Item.innerHTML = counter + course[i]['course_name'];
+          smallItem = document.createElement("small");
+          smallItem.innerHTML = course[i]['course_datetime'];
+          divItem.appendChild(h5Item);
+          divItem.appendChild(smallItem);
+          courseItem.appendChild(divItem);
+          smallItem = document.createElement("small");
+          smallItem.innerHTML = course[i]['course_location'];
+          courseItem.appendChild(smallItem);
+          courseList.appendChild(courseItem);
+
+          courseItem.classList.add("course", "list-group-item", "list-group-item-action", "flex-column", "align-items-start");
+          courseItem.setAttribute("data-uuid", course[i + 1]);
+          divItem = document.createElement("div");
+          divItem.classList.add("d-flex", "w-100", "justify-content-between");
+          h5Item = document.createElement("h5");
+          h5Item.classList.add("mb-1");
+          h5Item.innerHTML = counter + ": " + course[i + 1];
+          divItem.appendChild(h5Item);
+          courseItem.appendChild(divItem);
+          courseList.appendChild(courseItem);
+          counter++;
+        }
+
+      }
+    }
+  }
+
+  xhttp.open("GET", "http://localhost:5001/coursePath?user_uid=" + encodeURIComponent(userID) + "&occupation_uri=" + encodeURIComponent(curr_occupation), true);
+  xhttp.setRequestHeader("Content-type", "application/json");
+  xhttp.send(null);
+}
