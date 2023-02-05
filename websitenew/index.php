@@ -39,7 +39,12 @@
                         <div class="user col" style="border-top-style: none;">
                             <p id="userText">Your UserID is:</p>
                         </div>
-                        <div class="col" style="border-top-style: none;"><button class="btn btn-primary" type="button" onclick=copyUserID();>Copy</button></div>
+                        <div class="col" style="border-top-style: none;">
+                            <button class="btn btn-primary" type="button" onclick=copyUserID();>Copy</button>
+                            <button class="btn btn-primary" type="button" onclick=commitUserToDatabase();>Commit</button>
+                        </div>
+
+                        
                     </div>
                     <div class="row">
                         <div class="col" style="border-top-style: none;">
@@ -123,7 +128,7 @@
                     </div>
                     <hr style="margin-top: 30px;margin-bottom: 10px;">
                     <div class="row">
-                        <div class="col" style="margin-bottom: 10px;"><button onclick="filterCourses();" class="btn btn-secondary d-block w-100" id="submitButton-1" type="button"><i class="fas fa-brain"></i>&nbsp;Recommend</button></div>
+                        <div class="col" style="margin-bottom: 10px;"><button onclick="recommendCourses();" class="btn btn-secondary d-block w-100" id="submitButton-1" type="button"><i class="fas fa-brain"></i>&nbsp;Recommend</button></div>
                         <div class="col"><button onclick="getRelatedSkills();" class="btn btn-secondary d-block w-100" id="submitButton-3" type="button"><i class="fas fa-share-alt-square"></i>&nbsp;Related skills (occupation)</button></div>
                         <div class="col"><button onclick="getRelatedSkillsUser();" class="btn btn-secondary d-block w-100" id="submitButton-4" type="button"><i class="fas fa-share-alt-square"></i>&nbsp;Related skills (user skillset)</button></div>
                     </div>
