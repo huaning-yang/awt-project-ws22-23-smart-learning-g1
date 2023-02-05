@@ -1,0 +1,66 @@
+#searchbar {
+  /*margin-left: 15%;*/
+  /*padding: 15px;*/
+  /*border-radius: 10px;*/
+  margin-bottom: 10px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+input[type=text] {
+  width: 30%;
+  transition: width 0.15s ease-in-out;
+}
+
+/* When the input field gets focus,
+		change its width to 100% */
+
+input[type=text]:focus {
+  width: 70%;
+}
+
+#list {
+  font-size: 1.5em;
+  margin-left: 90px;
+}
+
+.courseList {
+  margin-top: 50px;
+  margin-bottom: 100px;
+}
+
+.scrollable {
+  border: 2px solid #ccc;
+  height: 300px;
+  overflow-y: scroll;
+  min-height: 100px;
+  min-width: 300px;
+  resize: vertical;
+}
+
+.europass {
+  display: none;
+  border: 2px solid #ccc;
+  height: 150px;
+  overflow-y: scroll;
+  min-height: 100px;
+  min-width: 300px;
+}
+
+.user {
+  margin-top: 1.5em;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1em;
+  align-items: center;
+}
+
+hr {
+  margin-top: 30px;
+  margin-bottom: 20px;
+  border: 0;
+  border-top: 1px solid #c9c7c7;
+  width: 100%;
+}
+

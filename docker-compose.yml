@@ -26,6 +26,18 @@ services:
       - course-api-service  # website is not going to work 
                              # unless course-api-service is running
 
+  website:
+    image: php:apache  # pulling image from DockerHub
+    # networks:
+    #   internal:
+    volumes:
+      - ./websitenew:/var/www/html # mount
+    ports:
+      - 5003:80  # host:container
+    depends_on:
+      - course-api-service  # website is not going to work 
+                             # unless course-api-service is running
+
   neo4jdb:
     # Docker image to be used
     image: neo4j:latest
