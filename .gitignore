@@ -6,3 +6,5 @@
 test.py
 
 database/logs/*
+database/data/*
+!database/data/PLACEHOLDER

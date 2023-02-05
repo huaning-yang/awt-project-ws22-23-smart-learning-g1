@@ -40,7 +40,8 @@ services:
 
   neo4jdb:
     # Docker image to be used
-    image: neo4j:latest
+    # image: neo4j:latest
+    build: ./database
     hostname: neo4jdb
     # The ports that will be accessible from outside the container - HTTP (7474) and Bolt (7687).
     ports:
