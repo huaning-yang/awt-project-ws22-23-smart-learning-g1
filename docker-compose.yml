@@ -26,7 +26,7 @@ services:
       - course-api-service  # website is not going to work 
                              # unless course-api-service is running
 
-  website:
+  websitenew:
     image: php:apache  # pulling image from DockerHub
     # networks:
     #   internal:
@@ -41,7 +41,7 @@ services:
   neo4jdb:
     # Docker image to be used
     image: neo4j:latest
-
+    hostname: neo4jdb
     # The ports that will be accessible from outside the container - HTTP (7474) and Bolt (7687).
     ports:
       - "7474:7474"
