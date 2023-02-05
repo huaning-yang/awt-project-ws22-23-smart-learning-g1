@@ -608,6 +608,18 @@ class RecommendCoursePath(Resource):
                 'description': 'Planned occupation',
                 'in': 'query',
                 'type': 'string'
+            },
+            {
+                'name': 'time',
+                'description': 'Endtime of course',
+                'in': 'query',
+                'type': 'string'
+            },
+            {
+                'name': 'location',
+                'description': 'Location of course',
+                'in': 'query',
+                'type': 'string'
             }
         ],
         'responses': {
@@ -623,6 +635,8 @@ class RecommendCoursePath(Resource):
     def get(self):
         user_id = request.args.get('user_uid')
         occupation = request.args.get('occupation_uri')
+        time = request.args.get('time')
+        location = request.args.get('location')
         path, skills_uri, essentials_uri = [], [], []
         def get_skillset(tx):
             return list(tx.run(
@@ -631,15 +645,6 @@ class RecommendCoursePath(Resource):
                 WHERE u.uid=$user_id
                 RETURN s
                 ''', user_id=user_id
-            ))
-        def get_best_course(tx):
-            return list(tx.run(
-                '''
-                MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
-                WHERE NOT m.concept_uri in $skills_uri
-                AND o.OccupationUri=$occupation
-                RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
-                ''', skills_uri=skills_uri, occupation=occupation
             ))
         def get_unobtainable(tx):
             return list(tx.run(
@@ -658,6 +663,45 @@ class RecommendCoursePath(Resource):
                 RETURN s
                 ''', occupation=occupation
             ))
+        def get_best_course(tx):
+            if(time and location):
+                return list(tx.run(
+                    '''
+                    MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
+                    WHERE NOT m.concept_uri in $skills_uri AND c.course_location=$location
+                    AND toString(c.course_datetime) < $time AND toString(c.course_datetime)<>"No dates available" AND toString(c.course_datetime) > toString("0001-01-01T00:00:00")
+                    AND o.OccupationUri=$occupation
+                    RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
+                    ''', skills_uri=skills_uri, location=location, time=time, occupation=occupation
+                ))
+            elif (not time and location):
+                return list(tx.run(
+                    '''
+                    MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
+                    WHERE NOT m.concept_uri in $skills_uri AND c.course_location=$location
+                    AND o.OccupationUri=$occupation
+                    RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
+                    ''', skills_uri=skills_uri, location=location, occupation=occupation
+                ))
+            elif (time and not location):
+                return list(tx.run(
+                    '''
+                    MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
+                    WHERE NOT m.concept_uri in $skills_uri
+                    AND toString(c.course_datetime) < $time AND toString(c.course_datetime)<>"No dates available" AND toString(c.course_datetime) > toString("0001-01-01T00:00:00")
+                    AND o.OccupationUri=$occupation
+                    RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
+                    ''', skills_uri=skills_uri, time=time, occupation=occupation
+                ))
+            else:
+                return list(tx.run(
+                '''
+                MATCH(c:Course)-[r2:PROVIDE_SKILL]->(m:Skill)<-[r:requires{type: 'essential'}]-(o:Occupation)
+                WHERE NOT m.concept_uri in $skills_uri
+                AND o.OccupationUri=$occupation
+                RETURN c,collect(m.concept_uri), count(m) as freq ORDER by freq DESC LIMIT 3
+                ''', skills_uri=skills_uri, occupation=occupation
+            ))
 
         db = get_db()
         skills = flatten(db.execute_read(get_skillset))
@@ -675,30 +719,39 @@ class RecommendCoursePath(Resource):
         skillset_uris2 = copy.deepcopy(skills_uri)
         path1, path2 = [], []
         course = flatten(db.execute_read(get_best_course))
-        path1.append(serialize_course(course[0]))
-        path1.append(course[1])
-        for sk in course[1]:
-                skillset_uris1.append(sk)
-        path2.append(serialize_course(course[3]))
-        path2.append(course[4])
-        for sk in course[1]:
-                skillset_uris2.append(sk)
+        if course:
+            path1.append(serialize_course(course[0]))
+            path1.append(course[1])
+            for sk in course[1]:
+                    skillset_uris1.append(sk)
+            path2.append(serialize_course(course[3]))
+            path2.append(course[4])
+            for sk in course[1]:
+                    skillset_uris2.append(sk)
+        else:
+            return path
 
         while(not all(item in skillset_uris1 for item in essentials_uri)):
             skills_uri = skillset_uris1
             course = flatten(db.execute_read(get_best_course))
-            path1.append(serialize_course(course[0]))
-            path1.append(course[1])
-            for sk in course[1]:
-                skillset_uris1.append(sk)
+            if course:
+                path1.append(serialize_course(course[0]))
+                path1.append(course[1])
+                for sk in course[1]:
+                    skillset_uris1.append(sk)
+            else:
+                return path
 
         while(not all(item in skillset_uris2 for item in essentials_uri)):
             skills_uri = skillset_uris2
             course = flatten(db.execute_read(get_best_course))
-            path2.append(serialize_course(course[0]))
-            path2.append(course[1])
-            for sk in course[1]:
-                skillset_uris2.append(sk)
+            if course:
+                path2.append(serialize_course(course[0]))
+                path2.append(course[1])
+                for sk in course[1]:
+                    skillset_uris2.append(sk)
+            else:
+                return path
         path.append(path1)
         path.append(path2)
         return path
@@ -822,14 +875,6 @@ class RecommenderRankingSkills(Resource):
         location = request.args.get('location')
         time = request.args.get('time')
         course_id = ''
-        def get_courses(tx):
-            return list(tx.run(
-                '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
-                RETURN course
-                '''
-            ))
         def get_occupation_essential(tx):
             return list(tx.run(
                 '''
@@ -870,30 +915,6 @@ class RecommenderRankingSkills(Resource):
                 RETURN course.course_datetime
                 ''',course_id=course_id
             ))
-        def get_courses_with_time(tx):
-                return list(tx.run(
-                '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
-                RETURN course
-                ''',time=time
-            ))
-        def get_courses_with_location(tx):
-                return list(tx.run(
-                '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location
-                RETURN course
-                ''',location=location
-            ))
-        def get_courses_with_location_time(tx):
-            return list(tx.run(
-                '''
-                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
-                RETURN course
-                ''',location=location,time=time
-            ))
         def get_course_from_uri(tx):
             return list(tx.run(
                 '''
@@ -902,6 +923,40 @@ class RecommenderRankingSkills(Resource):
                 RETURN c
                 ''', course_id=course_id
             ))
+        def get_courses(tx):
+            if time and location:
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
+                RETURN course
+                ''',location=location,time=time
+            ))
+            elif not time and location:
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND course.course_location=$location
+                RETURN course
+                ''',location=location
+            ))
+            elif time and not location:
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  '''] AND toString(course.course_datetime) < $time AND toString(course.course_datetime)<>"No dates available" AND toString(course.course_datetime) > toString("0001-01-01T00:00:00")
+                RETURN course
+                ''',time=time
+            ))
+            else:
+                return list(tx.run(
+                '''
+                MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
+                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
+                RETURN course
+                '''
+            ))
+
         def compute_score(essentials, optionals, courses):
             number_essentials = len(list(set(essentials).intersection(courses)))
             number_optionals = len(list(set(optionals).intersection(courses)))
@@ -920,14 +975,7 @@ class RecommenderRankingSkills(Resource):
         db = get_db()
         essentials = db.execute_read(get_occupation_essential)
         optionals = db.execute_read(get_occupation_optional)
-        if time and location:
-            courses = db.execute_read(get_courses_with_location_time)
-        elif time and not location:
-            courses = db.execute_read(get_courses_with_time)
-        elif not time and location:
-            courses = db.execute_read(get_courses_with_location)
-        else:
-            courses = db.execute_read(get_courses)
+        courses = db.execute_read(get_courses)
         essentials_uri = []
         optionals_uri = []
         for tmp in essentials:

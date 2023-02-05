@@ -74,10 +74,6 @@ function filterCourses() {
   const date = document.getElementById('date-select').value + "T00:00:00";
   const location = document.getElementById('location-select').value;
 
-  // console.log(values);
-  // console.log(date);
-  // console.log(selectedOccupation);
-  // console.log(location);
   var params = "?";
   for (const value of values) {
     params = params + "skill_uid=" + encodeURIComponent(value) + "&";
@@ -116,7 +112,7 @@ function filterCourses() {
         //     </div>
         // </div>
 
-        
+
         var courseItem = document.createElement("div");
         courseItem.classList.add("col-md-6", "col-lg-4");
         courseItem.setAttribute("data-uuid", course.course_id);
@@ -538,7 +534,6 @@ function SelectRecommendation() {
 }
 
 function getRelatedSkillsUser() {
-  userID = document.getElementById("userID").value;
   const recommenderBox = document.getElementById("recommendation-items");
   var xhr = new XMLHttpRequest();
   var data;
@@ -565,4 +560,67 @@ function getRelatedSkillsUser() {
   );
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.send();
+}
+
+function recommendCoursePath() {
+  var xhttp = new XMLHttpRequest();
+  var data;
+  var params = '';
+  const date = document.getElementById('date-select').value + "T00:00:00";
+  const location = document.getElementById('location-select').value;
+  if (location !== "none") {
+    params = params + "&" + "location=" + encodeURIComponent(location);
+  }
+  if (date !== "T00:00:00") {
+    params = params + "&" + "time=" + encodeURIComponent(date);
+  }
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      data = this.responseText;
+      //   console.log(data);
+      var coursesResponse = JSON.parse(data);
+      console.log(coursesResponse);
+      courseList = document.getElementById("courseList");
+      courseList.replaceChildren();
+
+      for (var j = 0; j < coursesResponse.length; j++) {
+        var course = coursesResponse[j];
+        let counter = 1
+        for (var i = 0; i < course.length; i = i + 2) {
+          var courseItem = document.createElement("div");
+          courseItem.classList.add("col-md-6", "col-lg-4");
+          courseItem.setAttribute("data-uuid", course[i]['course_id']);
+          var divProject = document.createElement("div");
+          divProject.classList.add("project-card-no-image");
+          var h3Item = document.createElement("h3");
+          h3Item.innerHTML = counter + ": " + course[i]['course_name'];
+          var h4Item = document.createElement("h4");
+          h4Item.innerHTML = course[i + 1];
+          var small1Item = document.createElement("small");
+          small1Item.innerHTML = "Date: " + course[i]['course_datetime'];
+          var small2Item = document.createElement("small");
+          small2Item.innerHTML = "Location: " + course[i]['course_location'];
+          var tagItem = document.createElement("div");
+          tagItem.classList.add("tags");
+          var aItem = document.createElement("a");
+          aItem.href = "#";
+          aItem.innerHTML = "#";
+          tagItem.appendChild(aItem);
+          divProject.appendChild(h3Item);
+          divProject.appendChild(h4Item);
+          divProject.appendChild(small1Item);
+          divProject.appendChild(small2Item);
+          divProject.appendChild(tagItem);
+          courseItem.appendChild(divProject);
+          courseList.appendChild(courseItem);
+          counter++;
+        }
+
+      }
+    }
+  }
+
+  xhttp.open("GET", "http://localhost:5001/coursePath?user_uid=" + encodeURIComponent(userID) + "&occupation_uri=" + encodeURIComponent(curr_occupation) + params, true);
+  xhttp.setRequestHeader("Content-type", "application/json");
+  xhttp.send(null);
 }
