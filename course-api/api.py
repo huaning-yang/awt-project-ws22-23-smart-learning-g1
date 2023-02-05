@@ -27,6 +27,7 @@ user_id = -1
 app = Flask(__name__)
 # Instantiate the app
 CORS(app, resources={r"/*": {"origins": "http://localhost:5002", "headers": "Content-Type, Authorization"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:5003", "headers": "Content-Type, Authorization"}})
 # CORS(app)
 api = Api(app)
 
@@ -38,7 +39,7 @@ def output_json(data, code, headers=None):
 
 # driver = GraphDatabase.driver("neo4j+s://b367eb11.databases.neo4j.io", auth=basic_auth("neo4j", "2WPduo4-J4EK5ZEOuW5cm3hE3ZI85IgaXSOEFTDXHYE"))
 # driver = GraphDatabase.driver("neo4j+s://143fd7f8.databases.neo4j.io", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
-driver = GraphDatabase.driver("bolt://neo4jdb:7687", auth=basic_auth("neo4j", "6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4"))
+driver = GraphDatabase.driver("bolt://neo4jdb:7687")
 
 def get_db():
     if not hasattr(g, 'neo4j_db'):

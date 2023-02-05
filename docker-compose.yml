@@ -58,7 +58,6 @@ services:
     # Passes the following environment variables to the container
     environment:
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
-      - NEO4J_AUTH=neo4j/6XbIwSjfgyk6Dr830hsj5ljjS2l66_WKNvxXp5dVlS4
       - EXTENDED_CONF=yes
       - NEO4J_EDITION=docker_compose
       - 'NEO4J_PLUGINS=[ \"apoc\", \"graph-data-science\"]'

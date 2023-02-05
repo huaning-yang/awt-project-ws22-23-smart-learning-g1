@@ -92,7 +92,7 @@
                             </div>
                         </div>
                         <div class="col">
-                            <p>Skills not covered by any courses</p>
+                            <label for="unobtainable-items">Skills not covered by any courses</label><br>
                             <select multiple id="unobtainable-items">
 
                             </select>
@@ -100,7 +100,8 @@
                     </div>
                     <div class="row">
                         <div class="col">
-                            <p>Filter Date</p><input class="form-control" type="date" id="date-select" name="date">
+                            <label for="date-select">Filter Date</label><br>
+                            <input class="form-control" type="date" id="date-select" name="date">
                         </div>
                         <div class="col">
                             <div id="location">
