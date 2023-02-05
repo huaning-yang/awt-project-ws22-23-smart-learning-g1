@@ -170,12 +170,10 @@
                         // 				</a>';
 
                         echo '<div data-UUID=' . $course->course_id . ' class="course col-md-6 col-lg-4">
-                            <div class="project-card-no-image">
+                            <div class="project-card-no-image" style="min-height: 240px; max-height: 240px;">
                                 <h3>' . $course->course_name . '</h3>
-                                <h4>Short description</h4>
                                 <small>Date: ' . $course->course_datetime . '</small>
                                 <small>Location: ' . $course->course_location . '</small>
-                                <div class="tags"><a href="#">#</a></div>
                             </div>
                         </div>';
                     }
