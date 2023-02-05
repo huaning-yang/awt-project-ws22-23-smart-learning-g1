@@ -44,7 +44,7 @@
                             <button class="btn btn-primary" type="button" onclick=commitUserToDatabase();>Commit</button>
                         </div>
 
-                        
+
                     </div>
                     <div class="row">
                         <div class="col" style="border-top-style: none;">
@@ -55,6 +55,12 @@
                         <div class="col" style="border-top-style: none;">
                             <div class="input-group mb-3" style="margin-top: 10px;">
                                 <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-user" style="font-size: 24px;"></i></span></div><input id="europassURL" name="europassURL" class="form-control" type="text" placeholder="Europass URL"><button id="europassbtn" class="btn btn-primary" type="button" onclick=storeEuropassSkills()>Import Europass</button>
+                                <div>
+                                    <p id="europass"></p>
+                                </div>
+                                <div id="europassContainer" class="europass">
+                                    <ul id="europassList"> </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
