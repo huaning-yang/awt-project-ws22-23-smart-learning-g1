@@ -78,7 +78,6 @@
                             <div id="exist" class="scrollable">
                                 <div id="existing-comp"> </div>
                             </div>
-                            <input type="button" value="Commit" onclick=commitUserToDatabase();>
                         </div>
                     </div>
 
