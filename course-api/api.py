@@ -127,6 +127,14 @@ class Courses(Resource):
                 },
                 'collectionFormat': 'multi'
             }
+            ,
+            {
+                'name': 'course_location',
+                'in': 'formData',
+                'required': True,
+                'description': 'Location of the course',
+                'type': 'string'
+            }
         ],
         'responses': {
             '200': {
@@ -141,16 +149,17 @@ class Courses(Resource):
     def get(self):
         skills = request.args.getlist('skill_uid')
         print('''"''' + ''.join(skills) +  '''"''')
+        location = request.args.get('course_location')
         def get_filtered_courses(tx):
             return list(tx.run(
                 '''
                 MATCH (course:Course)-[:PROVIDE_SKILL]->(s:Skill)
-                WHERE s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
+                WHERE course.course_location=$location and  s.concept_uri in [''' + ','.join(f'"{sk}"' for sk in skills) +  ''']
                 RETURN course
-                '''
+                ''', location=location
             ))
         db = get_db()
-        result = db.execute_read(get_filtered_courses)
+        result = db.execute_read(get_filtered_courses, location=location)
         return [serialize_course(record['course']) for record in result]
 
 class LocationList(Resource):

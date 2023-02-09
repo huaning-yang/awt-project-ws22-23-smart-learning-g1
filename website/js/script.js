@@ -86,10 +86,11 @@ function filterCourses() {
   if (location !== "none") {
     params = params + "&" + "location=" + encodeURIComponent(location);
   }
-  if (date !== "T00:00:00") {
-    params = params + "&" + "time=" + encodeURIComponent(date);
-  }
+  // if (date !== "T00:00:00") {
+  //   params = params + "&" + "time=" + encodeURIComponent(date);
+  // }
   console.log("http://localhost:5001/rankingSkills" + params)
+
   // All the elements of the array the array
   // is being printed.
   var xhttp = new XMLHttpRequest();
@@ -100,6 +101,7 @@ function filterCourses() {
       //   console.log(data);
       var coursesResponse = JSON.parse(data);
       console.log(coursesResponse);
+      console.log("Debug")
       courseList = document.getElementById("courseList");
       courseList.replaceChildren();
 
@@ -122,6 +124,7 @@ function filterCourses() {
         h5Item = document.createElement("h5");
         h5Item.classList.add("mb-1");
         h5Item.innerHTML = course.course_name;
+        console.log(course.course_name)
         smallItem = document.createElement("small");
         smallItem.innerHTML = course.course_datetime;
         divItem.appendChild(h5Item);
