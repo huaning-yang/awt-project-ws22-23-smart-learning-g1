@@ -1396,7 +1396,24 @@ class Europass(Resource):
                 }
     
 class UserID(Resource):
-
+    @swagger.doc({
+        'tags': ['userID'],
+        'description': "This endpoint generates a unique user ID and returns it in the response.",
+        'responses': {
+            '200': {
+                'description': 'Successful generation of user uid',
+                'schema': {
+                    'type': 'object',
+                    'items': {
+                        'type': 'string'
+                    },
+                    "example": {
+                                "userID": "d11b6fc1-ecab-4a7c-9988-4a9d2b24bb4c"
+                            }
+                }
+            }
+        }
+    })
     def get(self):
         global user_id
         user_id = str(uuid4())
