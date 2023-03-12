@@ -50,6 +50,13 @@ docker-compose up --build
 
 During the initial boot-up of the system, the database is preloaded with data that has been preprocessed from prior project teams' work, which ensures that users have access to a comprehensive dataset from the onset.
 
+This may take a minute for everything to be started up. The system is ready when the following logs appear in the console:
+
+```
+awt-neo4jdb-1             | 2023-03-12 15:18:17.579+0000 INFO  Started.
+awt-course-api-service-1  | 172.19.0.4 - - [12/Mar/2023 15:18:18] "GET / HTTP/1.1" 200 -
+```
+
 Multiple containers will be spun-up after deployment:
 | URL | Component |
 |------------------------|-----------|
