@@ -1,7 +1,0 @@
-MATCH (o1:Occupation {OccupationUri: "http://data.europa.eu/esco/occupation/c40a2919-48a9-40ea-b506-1f34f693496d"})-[r1:requires {type: 'essential'}]->(s1:Skill)<-[r2:requires {type: 'essential'}]-(o2:Occupation)-[r3:requires]->(s2:Skill)
-WHERE o1 <> o2
-and s1<>s2
-AND NOT (o1)-[:requires]->(s2)
-RETURN s2.preferred_label, count(s2) as s2frequency
-ORDER BY s2frequency DESC
-LIMIT 15
