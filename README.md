@@ -52,4 +52,4 @@ Multiple containers will be spun-up after deployment:
 
 ## References
 * [Simple Flask SPA](https://www.bogotobogo.com/DevOps/Docker/Docker-Compose-FlaskREST-Service-Container-and-Apache-Container.php)
-* [Last semesters group work(https://github.com/ingastrelnikova/awt-pj-ss22-learn-tech-2)
+* [Last semesters group work](https://github.com/ingastrelnikova/awt-pj-ss22-learn-tech-2)
