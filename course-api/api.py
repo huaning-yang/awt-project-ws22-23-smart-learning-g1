@@ -12,6 +12,7 @@ import copy
 import sqlite3
 import datetime
 import json
+import numpy as np
 from uuid import uuid4
 
 from urllib.request import urlopen
@@ -797,7 +798,7 @@ class RecommendBasedOnSkillset(Resource):
                 WHERE n.uid=$user_uid WITH collect(s) as skills 
                 UNWIND skills as m 
                 MATCH(o:Occupation)-[r2:requires{type:'essential'}]->(m:Skill) 
-                return o,  count(m) as freq ORDER by freq DESC LIMIT 3
+                return o,  count(m) as freq ORDER by freq DESC LIMIT 15
                 ''', user_uid=user_uid
             ))
         def get_occupation_essential(tx):
@@ -816,7 +817,28 @@ class RecommendBasedOnSkillset(Resource):
                 RETURN s
                 ''', user_uid=user_uid
             ))
+        def calculate_manhattan_distance(occupation_uri, occupation_skills, skillset, ret):
+            occupation = np.ones(len(occupation_skills))
+            user = np.zeros(len(occupation_skills))
+            occ_skills = []
+            user_skills = []
+            for sk in occupation_skills:
+                ser = serialize_skill(sk)
+                occ_skills.append(ser)
+
+            for sk in skillset:
+                ser = serialize_skill(sk)
+                user_skills.append(ser)
+            
+            index = 0
+            for sk in user_skills:
+                for sk2 in occ_skills:
+                    if sk["concept_uri"] == sk2["concept_uri"]:
+                        user[index] = 1
+                        index = index + 1
+            ret[occupation_uri] = sum(abs(value1 - value2) for value1, value2 in zip(occupation,user))
         db = get_db()
+        distances = {}
         skillset = flatten(db.execute_read(get_user_skills))
         skillset_uri = []
         for sk in skillset:
@@ -827,11 +849,12 @@ class RecommendBasedOnSkillset(Resource):
         for oc in occupations:
             occupation_uri = oc[0]['OccupationUri']
             occ_skills = flatten(db.execute_read(get_occupation_essential))
+            calculate_manhattan_distance(occupation_uri=occupation_uri, occupation_skills=occ_skills, skillset=skillset, ret=distances)
             for sk in occ_skills:
                 serialized = serialize_skill(sk)
                 if serialized not in skills:
                     skills.append(serialized)
-        return skills
+        return distances
 
 class RecommenderRankingSkills(Resource):
     @swagger.doc({
